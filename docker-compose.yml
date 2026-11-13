@@ -1,0 +1,57 @@
+name: gym-tracker
+
+services:
+  gym-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gym-tracker:latest
+    container_name: gym-tracker
+    restart: unless-stopped
+    ports:
+      - target: 3456
+        published: "3457"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/gym-tracker
+        target: /app/data
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      PORT: "3456"
+      DATA_DIR: /app/data
+    x-casaos:
+      envs:
+        - container: TZ
+          description:
+            en_us: Timezone
+        - container: PORT
+          description:
+            en_us: Internal HTTP port
+      ports:
+        - container: "3456"
+          description:
+            en_us: Web UI and sync API
+      volumes:
+        - container: /app/data
+          description:
+            en_us: SQLite database (gym.db)
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: gym-tracker
+  author: self
+  developer: self
+  category: Health
+  title:
+    en_us: Gym Tracker
+  tagline:
+    en_us: Minimal personal training log
+  description:
+    en_us: Self-hosted, local-first gym tracker with manual save/load sync, weekly split planner, set logging and PR goals.
+  icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wger.png
+  index: /
+  port_map: "3457"
+  scheme: http

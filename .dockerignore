@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+client/src-tauri/target
+client/src-tauri/gen
+data
+*.db
+*.db-wal
+*.db-shm
+.git
+client/dist-local

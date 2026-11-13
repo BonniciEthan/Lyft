@@ -1,0 +1,13 @@
+node_modules/
+client/dist/
+client/dist-local/
+client/src-tauri/target/
+client/src-tauri/gen/
+data/
+downloads/
+friends/
+*.db
+*.db-wal
+*.db-shm
+*.log
+.DS_Store

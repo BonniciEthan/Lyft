@@ -1,0 +1,166 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createSeedState } from './seed.js';
+import { loadLocal, looksLikeState, normalizeState, saveLocal } from './lib/storage.js';
+import { pullState, pushState } from './lib/api.js';
+import { TopBar } from './components/TopBar.jsx';
+import { NavDock } from './components/NavDock.jsx';
+import { SettingsModal } from './components/SettingsModal.jsx';
+import { ConfirmDialog } from './components/Modal.jsx';
+import { Toasts } from './components/Toasts.jsx';
+import { ProgressTab } from './components/ProgressTab.jsx';
+import { SplitTab } from './components/SplitTab.jsx';
+import { GoalsTab } from './components/GoalsTab.jsx';
+import { IS_LOCAL } from './edition.js';
+
+const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
+
+export default function App() {
+  const [store, setStore] = useState(() => loadLocal() || { state: createSeedState(), hasUnsavedChanges: false });
+  const { state, hasUnsavedChanges } = store;
+  const storeRef = useRef(store);
+  storeRef.current = store;
+
+  const [tab, setTab] = useState('progress');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [confirmRequest, setConfirmRequest] = useState(null);
+  const confirmResolver = useRef(null);
+
+  // Local-first persistence: every state change lands in localStorage immediately.
+  useEffect(() => {
+    saveLocal(store.state, store.hasUnsavedChanges);
+  }, [store]);
+
+  /** Apply a mutation to a cloned draft of state and mark it dirty. */
+  const update = useCallback((mutate) => {
+    setStore((prev) => {
+      const draft = clone(prev.state);
+      mutate(draft);
+      return { state: draft, hasUnsavedChanges: !IS_LOCAL };
+    });
+  }, []);
+
+  const toast = useCallback((message, type = 'success') => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((t) => [...t.slice(-2), { id, message, type }]);
+    setTimeout(() => setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x))), 2200);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
+  }, []);
+
+  const askConfirm = useCallback(
+    (request) =>
+      new Promise((resolve) => {
+        confirmResolver.current = resolve;
+        setConfirmRequest(request);
+      }),
+    []
+  );
+
+  const resolveConfirm = (value) => {
+    const resolve = confirmResolver.current;
+    confirmResolver.current = null;
+    setConfirmRequest(null);
+    resolve?.(value);
+  };
+
+  const handleSave = async () => {
+    if (saving || loading) return;
+    // Blur any focused inline input so its pending value commits before we snapshot.
+    if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+    await new Promise((r) => setTimeout(r, 0));
+
+    setSaving(true);
+    const snapshot = storeRef.current.state;
+
+    try {
+      const res = await pushState(snapshot);
+      if (!res.success) throw new Error(res.error || 'Save failed');
+      setStore((prev) => ({
+        state: { ...prev.state, lastSynced: res.lastSynced },
+        // If something changed while the request was in flight, keep it marked dirty.
+        hasUnsavedChanges: prev.state !== snapshot,
+      }));
+      toast('Saved to server');
+    } catch (err) {
+      toast(`Save failed — ${err.message}. Local changes kept.`, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const doLoad = async () => {
+    setLoading(true);
+    try {
+      const data = await pullState();
+      if (!looksLikeState(data)) throw new Error('Server returned invalid data');
+      setStore({ state: normalizeState(data), hasUnsavedChanges: false });
+      toast('Loaded from server');
+    } catch (err) {
+      toast(`Load failed — ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoad = async () => {
+    if (saving || loading) return;
+    if (hasUnsavedChanges) {
+      const ok = await askConfirm({
+        title: 'Load from server?',
+        message: 'Unsaved local changes will be overwritten. Continue?',
+        confirmLabel: 'Overwrite',
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    doLoad();
+  };
+
+  return (
+    <div className="app">
+      <div className="ambient" aria-hidden>
+        <span className="orb orb-indigo" />
+        <span className="orb orb-ocean" />
+        <span className="orb orb-slate" />
+      </div>
+
+      {IS_LOCAL ? (
+        <header className="topbar topbar-local">
+          <div className="topbar-inner">
+            <span className="app-title">Gym Tracker</span>
+          </div>
+        </header>
+      ) : (
+      <TopBar
+        lastSynced={state.lastSynced}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saving={saving}
+        loading={loading}
+        onSave={handleSave}
+        onLoad={handleLoad}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+      )}
+
+      <main className="content">
+        {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} />}
+        {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} />}
+        {tab === 'goals' && <GoalsTab state={state} update={update} askConfirm={askConfirm} />}
+      </main>
+
+      <NavDock active={tab} onChange={setTab} />
+
+      {!IS_LOCAL && (
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onSaved={() => toast('Server URL saved')}
+        />
+      )}
+      <ConfirmDialog request={confirmRequest} onResolve={resolveConfirm} />
+      <Toasts toasts={toasts} />
+    </div>
+  );
+}
