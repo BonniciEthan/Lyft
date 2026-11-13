@@ -72,7 +72,7 @@ export function SettingsModal({ open, onClose, onSaved }) {
         <span className="field-hint">
           {desktop
             ? 'Desktop app: enter your home server LAN or Tailscale address, e.g. http://100.64.0.10:3456.'
-            : 'Leave blank when this page is served by your Gym Tracker server. Use a full URL to point at another server.'}
+            : 'Leave blank when this page is served by your Lyft server. Use a full URL to point at another server.'}
         </span>
         {invalid && <span className="field-error">URL must start with http:// or https://</span>}
       </label>

@@ -129,7 +129,7 @@ export default function App() {
       {IS_LOCAL ? (
         <header className="topbar topbar-local">
           <div className="topbar-inner">
-            <span className="app-title">Gym Tracker</span>
+            <span className="app-title">Lyft</span>
           </div>
         </header>
       ) : (

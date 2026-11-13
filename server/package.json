@@ -1,8 +1,8 @@
 {
-  "name": "gym-tracker-server",
+  "name": "lyft-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Self-hosted backend for Gym Tracker (Express + better-sqlite3)",
+  "description": "Self-hosted backend for Lyft (Express + better-sqlite3)",
   "main": "index.js",
   "type": "commonjs",
   "engines": {

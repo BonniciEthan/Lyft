@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
-# Gym Tracker Local: one-click setup without root.
-# Copies the portable AppImage to ~/Applications and adds Gym Tracker to the app menu.
+# Lyft Local: one-click setup without root.
+# Copies the portable AppImage to ~/Applications and adds Lyft to the app menu.
 #   Run:  bash setup.sh            (install)
 #         bash setup.sh --remove   (uninstall; your workout data is kept)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DEST="$HOME/Applications"
-BIN="$DEST/GymTrackerLocal.AppImage"
+BIN="$DEST/LyftLocal.AppImage"
 ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
-DESKTOP="$HOME/.local/share/applications/gym-tracker-local.desktop"
+DESKTOP="$HOME/.local/share/applications/lyft-local.desktop"
 
 if [[ "${1:-}" == "--remove" ]]; then
-  rm -f "$BIN" "$DESKTOP" "$ICON_DIR/gym-tracker-local.png"
+  rm -f "$BIN" "$DESKTOP" "$ICON_DIR/lyft-local.png"
   command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" || true
-  echo "Gym Tracker removed. Your data is still in ~/.local/share/com.personal.gymtracker.local/"
+  echo "Lyft removed. Your data is still in ~/.local/share/com.personal.lyft.local/"
   exit 0
 fi
 
-SRC="$(ls "$HERE"/Gym-Tracker-Local-*-Linux-Portable.AppImage 2>/dev/null | head -n1 || true)"
+SRC="$(ls "$HERE"/Lyft-Local-*-Linux-Portable.AppImage 2>/dev/null | head -n1 || true)"
 if [[ -z "$SRC" ]]; then
-  echo "Can't find the Gym-Tracker-Local-…-Linux-Portable.AppImage next to this script."
+  echo "Can't find the Lyft-Local-…-Linux-Portable.AppImage next to this script."
   exit 1
 fi
 
@@ -32,19 +32,19 @@ chmod +x "$BIN"
 TMP="$(mktemp -d)"
 ( cd "$TMP" && "$BIN" --appimage-extract '*.png' >/dev/null 2>&1 || true )
 PNG="$(find "$TMP/squashfs-root" -maxdepth 1 -name '*.png' 2>/dev/null | head -n1 || true)"
-[[ -n "$PNG" ]] && cp -L "$PNG" "$ICON_DIR/gym-tracker-local.png"
+[[ -n "$PNG" ]] && cp -L "$PNG" "$ICON_DIR/lyft-local.png"
 rm -rf "$TMP"
 
 cat > "$DESKTOP" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Gym Tracker
+Name=Lyft
 Comment=Minimal personal gym tracker
 Exec="$BIN"
-Icon=gym-tracker-local
+Icon=lyft-local
 Terminal=false
 Categories=Utility;
-StartupWMClass=gym-tracker-local
+StartupWMClass=lyft-local
 EOF
 command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" || true
 
@@ -57,4 +57,4 @@ if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then
 fi
 
 echo
-echo "Done! Open \"Gym Tracker\" from your app menu."
+echo "Done! Open \"Lyft\" from your app menu."

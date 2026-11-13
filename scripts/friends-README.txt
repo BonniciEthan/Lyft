@@ -1,4 +1,4 @@
-GYM TRACKER: minimal personal workout log
+LYFT: minimal personal workout log
 =========================================
 
 Everything you log stays on your own computer. Nothing is uploaded and you don't
@@ -14,16 +14,16 @@ Tabs:
 LINUX (Ubuntu, Zorin, Mint, Debian …)
 -------------------------------------
 Option 1: Install with the .deb (recommended)
-  Double-click  Gym-Tracker-Local-…-Linux-Setup.deb  and click Install,
+  Double-click  Lyft-Local-…-Linux-Setup.deb  and click Install,
   or in a terminal:
-    sudo apt install ./Gym-Tracker-Local-*-Linux-Setup.deb
-  Then open "Gym Tracker Local" from your app menu.
-  Uninstall: sudo apt remove gym-tracker-local
+    sudo apt install ./Lyft-Local-*-Linux-Setup.deb
+  Then open "Lyft Local" from your app menu.
+  Uninstall: sudo apt remove lyft-local
 
 Option 2: Portable AppImage (no install)
-  1. Right-click  Gym-Tracker-Local-…-Linux-Portable.AppImage → Properties →
+  1. Right-click  Lyft-Local-…-Linux-Portable.AppImage → Properties →
      Permissions → tick "Allow executing file as program"
-     (or: chmod +x Gym-Tracker-Local-*.AppImage)
+     (or: chmod +x Lyft-Local-*.AppImage)
   2. Double-click it.
   If nothing happens, install FUSE 2 once:  sudo apt install libfuse2
   (on Ubuntu 24.04 or newer:  sudo apt install libfuse2t64)
@@ -36,5 +36,5 @@ Option 3: Setup script (AppImage plus an app-menu shortcut, no sudo)
 YOUR DATA
 ---------
 Your data is saved automatically on every tap, in:
-  ~/.local/share/com.personal.gymtracker.local/
+  ~/.local/share/com.personal.lyft.local/
 Uninstalling the app does not delete your data.

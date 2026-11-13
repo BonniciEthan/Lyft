@@ -1,4 +1,4 @@
-# Gym Tracker
+# Lyft
 
 A self-hosted personal gym tracker. One React + Vite front end, served three ways:
 
@@ -26,13 +26,13 @@ Sync only happens when you tap a button. Every edit is saved to `localStorage` s
 Copy this folder to the server, then:
 
 ```bash
-sudo mkdir -p /DATA/AppData/gym-tracker
+sudo mkdir -p /DATA/AppData/lyft
 docker compose up -d --build
 ```
 
-Or in CasaOS: **App Store → Custom Install → Import** and paste `docker-compose.yml`. CasaOS cannot build images, so run `docker build -t gym-tracker:latest .` on the server first.
+Or in CasaOS: **App Store → Custom Install → Import** and paste `docker-compose.yml`. CasaOS cannot build images, so run `docker build -t lyft:latest .` on the server first.
 
-The database is at `/DATA/AppData/gym-tracker/gym.db`. On first start it is seeded with the default split, routines and goal. To back up, copy that file. The CasaOS tile icon is the `wger` icon from dashboard-icons; change `icon:` in the compose file if you want a different one.
+The database is at `/DATA/AppData/lyft/gym.db`. On first start it is seeded with the default split, routines and goal. To back up, copy that file. The CasaOS tile icon is the `wger` icon from dashboard-icons; change `icon:` in the compose file if you want a different one.
 
 API:
 

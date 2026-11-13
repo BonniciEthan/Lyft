@@ -1,6 +1,6 @@
 /**
  * Build edition.
- * - "server" (default): syncs with your self-hosted Gym Tracker server.
+ * - "server" (default): syncs with your self-hosted Lyft server.
  * - "local": standalone build for friends — no server, no settings, starts empty,
  *   everything stays on their own computer. Built with `npm run build:local`.
  */

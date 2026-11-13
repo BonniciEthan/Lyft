@@ -105,7 +105,7 @@ function ensureSeeded() {
   const row = selectState.get();
   if (!row) {
     upsertState.run({ data: JSON.stringify(SEED_STATE), updatedAt: new Date().toISOString() });
-    console.log(`[gym-tracker] Seeded ${isNewDb ? 'new' : 'empty'} database at ${DB_PATH}`);
+    console.log(`[lyft] Seeded ${isNewDb ? 'new' : 'empty'} database at ${DB_PATH}`);
   }
 }
 ensureSeeded();
@@ -119,7 +119,7 @@ function readState() {
   try {
     return JSON.parse(row.data);
   } catch (err) {
-    console.error('[gym-tracker] Stored state is corrupt, returning seed:', err.message);
+    console.error('[lyft] Stored state is corrupt, returning seed:', err.message);
     return JSON.parse(JSON.stringify(SEED_STATE));
   }
 }
@@ -222,7 +222,7 @@ app.post('/api/sync', (req, res) => {
   try {
     upsertState.run({ data: JSON.stringify(toStore), updatedAt: lastSynced });
   } catch (err) {
-    console.error('[gym-tracker] Failed to write state:', err);
+    console.error('[lyft] Failed to write state:', err);
     return res.status(500).json({ success: false, error: 'Failed to write to database' });
   }
 
@@ -246,9 +246,9 @@ app.get('/downloads', (_req, res) => {
   const files = fs.existsSync(DOWNLOADS_DIR) ? fs.readdirSync(DOWNLOADS_DIR).filter((f) => !f.startsWith('.')) : [];
   const items = files.map((f) => `<li><a href="/downloads/${encodeURIComponent(f)}">${f}</a></li>`).join('');
   res.type('html').send(
-    `<!doctype html><meta name="viewport" content="width=device-width"><title>Gym Tracker downloads</title>` +
+    `<!doctype html><meta name="viewport" content="width=device-width"><title>Lyft downloads</title>` +
       `<body style="font-family:sans-serif;background:#080A0F;color:#F8FAFC;padding:24px">` +
-      `<h1>Gym Tracker downloads</h1><ul>${items || '<li>No files yet</li>'}</ul></body>`
+      `<h1>Lyft downloads</h1><ul>${items || '<li>No files yet</li>'}</ul></body>`
   );
 });
 app.use('/downloads', express.static(DOWNLOADS_DIR, { index: false, dotfiles: 'ignore' }));
@@ -272,16 +272,16 @@ if (fs.existsSync(CLIENT_DIST)) {
     res.sendFile(path.join(CLIENT_DIST, 'index.html'));
   });
 } else {
-  console.warn(`[gym-tracker] Client build not found at ${CLIENT_DIST} — API only.`);
-  app.get('/', (_req, res) => res.type('text').send('Gym Tracker API is running. Build the client to serve the UI.'));
+  console.warn(`[lyft] Client build not found at ${CLIENT_DIST} — API only.`);
+  app.get('/', (_req, res) => res.type('text').send('Lyft API is running. Build the client to serve the UI.'));
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[gym-tracker] Listening on http://0.0.0.0:${PORT} (db: ${DB_PATH})`);
+  console.log(`[lyft] Listening on http://0.0.0.0:${PORT} (db: ${DB_PATH})`);
 });
 
 function shutdown(signal) {
-  console.log(`[gym-tracker] ${signal} received, shutting down`);
+  console.log(`[lyft] ${signal} received, shutting down`);
   server.close(() => {
     try {
       db.close();

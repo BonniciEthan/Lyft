@@ -1,13 +1,13 @@
 [package]
-name = "gym-tracker"
+name = "lyft"
 version = "1.0.0"
-description = "Gym Tracker desktop client"
+description = "Lyft desktop client"
 authors = ["you"]
 edition = "2021"
 rust-version = "1.77.2"
 
 [[bin]]
-name = "gym-tracker"
+name = "lyft"
 path = "src/main.rs"
 
 [build-dependencies]

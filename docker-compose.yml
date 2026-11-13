@@ -1,12 +1,12 @@
-name: gym-tracker
+name: lyft
 
 services:
-  gym-tracker:
+  lyft:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gym-tracker:latest
-    container_name: gym-tracker
+    image: lyft:latest
+    container_name: lyft
     restart: unless-stopped
     ports:
       - target: 3456
@@ -14,7 +14,7 @@ services:
         protocol: tcp
     volumes:
       - type: bind
-        source: /DATA/AppData/gym-tracker
+        source: /DATA/AppData/lyft
         target: /app/data
     environment:
       TZ: ${TZ:-Etc/UTC}
@@ -41,12 +41,12 @@ x-casaos:
   architectures:
     - amd64
     - arm64
-  main: gym-tracker
+  main: lyft
   author: self
   developer: self
   category: Health
   title:
-    en_us: Gym Tracker
+    en_us: Lyft
   tagline:
     en_us: Minimal personal training log
   description:

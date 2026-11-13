@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Gym Tracker Local",
-  "mainBinaryName": "gym-tracker-local",
+  "productName": "Lyft Local",
+  "mainBinaryName": "lyft-local",
   "version": "1.0.0",
-  "identifier": "com.personal.gymtracker.local",
+  "identifier": "com.personal.lyft.local",
   "build": {
     "beforeDevCommand": "npm run dev:local",
     "devUrl": "http://localhost:5173",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Gym Tracker",
+        "title": "Lyft",
         "width": 1100,
         "height": 800,
         "minWidth": 400,

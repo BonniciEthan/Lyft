@@ -1,6 +1,6 @@
 {
-  "name": "Gym Tracker",
-  "short_name": "Gym",
+  "name": "Lyft",
+  "short_name": "Lyft",
   "description": "Minimal personal gym tracker",
   "start_url": "./",
   "scope": "./",
