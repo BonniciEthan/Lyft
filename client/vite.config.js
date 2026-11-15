@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { offlineServiceWorker } from './sw-plugin.js';
 
 // Relative base so the same build works when served by Express and when
 // loaded from Tauri's bundled asset protocol.
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react()],
+  plugins: [react(), offlineServiceWorker()],
   clearScreen: false,
   server: {
     port: 5173,

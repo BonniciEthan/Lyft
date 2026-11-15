@@ -124,3 +124,12 @@ Log food from a bundled database of about 390 European/metric foods (values per 
 - **Barcode scanning** uses the browser's native `BarcodeDetector` where it exists (Chrome, Edge, Android), with the open-source `@zxing/browser` as a lazy-loaded fallback for Safari, Firefox and the desktop app.
 - **The live camera needs a secure context**: HTTPS, `localhost` or the desktop app. On a plain `http://<LAN-IP>` address the browser hides the camera, so the scanner falls back to **Take Photo** (which opens the phone's camera app) plus manual number entry.
 - **Targets** come from the Lifter Profile: maintenance is 33 kcal/kg for males and 30 kcal/kg for females, times an activity factor. Cut is −400 kcal with 2.2 g/kg protein and 0.8 g/kg fat. Maintain is 2.0 g/kg protein and 0.9 g/kg fat. Bulk is +300 kcal with the same macros as Maintain. Carbs fill the remaining calories. You can override any target manually.
+
+## Lyft Local on the web (GitHub Pages)
+
+The standalone edition is also hosted at **https://bonniciethan.github.io/Lyft/**. It works on any iPhone or Android phone and needs no server or account. Each person's data stays in their own browser.
+
+- **iPhone (Safari):** open the link, tap Share → **Add to Home Screen**, then open Lyft from the icon.
+- **Android (Chrome):** open the link, then tap **Install app** (or ⋮ → Add to Home screen).
+- The live camera scanner works because the site is HTTPS. After the first visit the app opens offline; food lookups still need a connection.
+- To publish changes, commit them and run `bash scripts/deploy-pages.sh`. It tests, builds, and pushes the files to the `gh-pages` branch that Pages serves. The offline service worker is generated at build time by [`client/sw-plugin.js`](client/sw-plugin.js) and is only registered by the local edition on HTTPS.

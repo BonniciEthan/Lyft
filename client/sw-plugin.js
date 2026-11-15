@@ -1,0 +1,125 @@
+/**
+ * Vite plugin that emits `sw.js`, a small offline service worker for the web build.
+ *
+ * The worker precaches every file in the build (hashed JS/CSS chunks, index.html and the
+ * public icons/manifest), so the installed app opens without a connection. The cache name
+ * includes a hash of the file list, so each deploy installs a fresh cache and drops the
+ * old one.
+ *
+ * Strategy:
+ * - Page navigations: network first (always get the newest index.html), cache fallback offline.
+ * - Same-origin files: cache first. Hashed file names never change, so this is always safe.
+ * - Google Fonts: cache first after the first load (stale fonts are harmless).
+ * - Everything else (Open Food Facts, the sync API): not intercepted.
+ */
+import { createHash } from 'node:crypto';
+import { readdirSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
+
+function listFiles(dir, root = dir) {
+  const out = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) out.push(...listFiles(full, root));
+    else out.push(relative(root, full).split('\\').join('/'));
+  }
+  return out;
+}
+
+const workerSource = (version, files) => `/* Lyft offline service worker (generated at build time) */
+const CACHE = 'lyft-${version}';
+const PRECACHE = ${JSON.stringify(['./', './index.html', ...files.map((f) => `./${f}`)], null, 0)};
+const FONT_CACHE = 'lyft-fonts';
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lyft-') && k !== CACHE && k !== FONT_CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put('./index.html', copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match('./index.html', { ignoreSearch: true }).then((r) => r || caches.match('./')))
+    );
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    if (url.pathname.includes('/api/')) return;
+    event.respondWith(
+      caches.match(req, { ignoreSearch: true }).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+      )
+    );
+    return;
+  }
+
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(
+      caches.open(FONT_CACHE).then((cache) =>
+        cache.match(req).then(
+          (hit) =>
+            hit ||
+            fetch(req).then((res) => {
+              if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+              return res;
+            })
+        )
+      )
+    );
+  }
+});
+`;
+
+export function offlineServiceWorker() {
+  let publicDir = '';
+  return {
+    name: 'lyft-offline-service-worker',
+    apply: 'build',
+    configResolved(config) {
+      publicDir = config.publicDir;
+    },
+    generateBundle(_options, bundle) {
+      const publicFiles = publicDir ? listFiles(publicDir) : [];
+      const files = [...new Set([...Object.keys(bundle), ...publicFiles])]
+        .filter((f) => f !== 'sw.js' && f !== 'index.html' && !f.endsWith('.map'))
+        .sort();
+      const version = createHash('sha256')
+        .update(files.join('\n'))
+        .update(Object.values(bundle).map((c) => (c.type === 'chunk' ? c.code : String(c.source))).join(''))
+        .digest('hex')
+        .slice(0, 12);
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source: workerSource(version, files) });
+    },
+  };
+}
