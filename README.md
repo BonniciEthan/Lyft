@@ -96,8 +96,31 @@ cd client && npm run tauri:dev               # desktop window against Vite
       ]
     }
   },
-  "goals": [{ "id", "exercise", "startPR", "currentPR", "targetPR", "targetDate", "notes", "achieved" }]
+  "goals": [{ "id", "exercise", "startPR", "currentPR", "targetPR", "targetDate", "notes", "achieved" }],
+  "nutrition": {
+    "days": {
+      "2026-11-15": {
+        "breakfast": [{ "id", "foodId": "rolled-oats", "name", "brand", "unit": "g", "grams": 80,
+                        "per100g": { "calories": 374, "protein": 13.5, "carbs": 58.7, "fat": 8 } }],
+        "lunch": [], "dinner": [], "snacks": []
+      }
+    },
+    "foods": [/* custom foods, optionally with a barcode */],
+    "meals": [/* saved meal presets: { "id", "name", "items": [entry] } */],
+    "goal": "cut | maintain | bulk",
+    "activity": 1,
+    "manual": { "calories": null, "protein": null, "carbs": null, "fat": null }
+  }
 }
 ```
 
 A day is only written to `logs` once you edit something on it, so browsing the calendar never creates empty entries.
+
+## Food tab
+
+Log food from a bundled database of about 390 European/metric foods (values per 100 g or per 100 ml), from your own custom foods, or by barcode. There are no paid APIs and no accounts:
+
+- **Packaged foods** come from [Open Food Facts](https://world.openfoodfacts.org), which is free and needs no key. Every product scanned is cached in `localStorage` (`lyft_off_barcode_cache_v1`), so repeat scans resolve instantly. A barcode that isn't found opens a pre-filled "Add New Barcode Food" form, and that food then scans from your own data.
+- **Barcode scanning** uses the browser's native `BarcodeDetector` where it exists (Chrome, Edge, Android), with the open-source `@zxing/browser` as a lazy-loaded fallback for Safari, Firefox and the desktop app.
+- **The live camera needs a secure context**: HTTPS, `localhost` or the desktop app. On a plain `http://<LAN-IP>` address the browser hides the camera, so the scanner falls back to **Take Photo** (which opens the phone's camera app) plus manual number entry.
+- **Targets** come from the Lifter Profile: maintenance is 33 kcal/kg for males and 30 kcal/kg for females, times an activity factor. Cut is −400 kcal with 2.2 g/kg protein and 0.8 g/kg fat. Maintain is 2.0 g/kg protein and 0.9 g/kg fat. Bulk is +300 kcal with the same macros as Maintain. Carbs fill the remaining calories. You can override any target manually.

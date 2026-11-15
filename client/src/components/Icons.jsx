@@ -109,3 +109,54 @@ export const SearchIcon = (p) => (
     <path d="M20 20l-3.5-3.5" />
   </svg>
 );
+
+export const FoodIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M6 3v5.5a2.5 2.5 0 0 0 5 0V3M8.5 3v18M18 21V3c-2.2 1.3-3.5 3.8-3.5 7v4H18" />
+  </svg>
+);
+
+export const BarcodeIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10.5 8v8M14 8v8M17 8v8" />
+  </svg>
+);
+
+export const FlashIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M13 2L4.5 13.5H12L11 22l8.5-11.5H12z" />
+  </svg>
+);
+
+export const CameraIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 7.5h3l1.6-2.5h6.8L17 7.5h3a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1z" />
+    <circle cx="12" cy="13.5" r="3.6" />
+  </svg>
+);
+
+export const EditIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />
+  </svg>
+);
+
+export const CopyIcon = (p) => (
+  <svg {...base} {...p}>
+    <rect x="8" y="8" width="13" height="13" rx="2.5" />
+    <path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3h-8A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8" />
+  </svg>
+);
+
+export const BookmarkIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M6 3.5h12V21l-6-4.2L6 21z" />
+  </svg>
+);
+
+export const CalendarIcon = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="4" width="18" height="17" rx="3" />
+    <path d="M3 9h18M8 2v4M16 2v4" />
+  </svg>
+);

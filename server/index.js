@@ -199,6 +199,29 @@ function validateState(s) {
     }
   }
 
+  // Nutrition diary (optional; older clients don't send it). The client normalises the
+  // details, so only the overall shape is checked here.
+  if (s.nutrition !== undefined && s.nutrition !== null) {
+    const n = s.nutrition;
+    if (!isPlainObject(n)) return '"nutrition" must be an object';
+    if (n.days !== undefined && !isPlainObject(n.days)) return '"nutrition.days" must be an object';
+    for (const [date, day] of Object.entries(n.days || {})) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return `Nutrition day "${date}" must be YYYY-MM-DD`;
+      if (!isPlainObject(day)) return `Nutrition day "${date}" must be an object`;
+      for (const meal of Object.values(day)) {
+        if (!Array.isArray(meal)) return `Nutrition day "${date}" meals must be arrays`;
+        for (const e of meal) {
+          if (!isPlainObject(e) || !(typeof e.grams === 'number' && Number.isFinite(e.grams) && e.grams >= 0)) {
+            return `Nutrition day "${date}" has an invalid entry`;
+          }
+        }
+      }
+    }
+    for (const key of ['foods', 'meals']) {
+      if (n[key] !== undefined && !Array.isArray(n[key])) return `"nutrition.${key}" must be an array`;
+    }
+  }
+
   return null;
 }
 
@@ -235,6 +258,7 @@ app.post('/api/sync', (req, res) => {
     logs: incoming.logs,
     goals: incoming.goals,
     ...(incoming.profile ? { profile: incoming.profile } : {}),
+    ...(incoming.nutrition ? { nutrition: incoming.nutrition } : {}),
   };
 
   try {

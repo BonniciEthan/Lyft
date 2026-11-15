@@ -3,6 +3,7 @@ import { WEEKDAYS } from './dates.js';
 
 import { IS_LOCAL } from '../edition.js';
 import { normalizeProfile } from './lifterProfileStore.js';
+import { normalizeNutrition } from './nutritionStore.js';
 
 export const STATE_KEY = IS_LOCAL ? 'gym_tracker_local_state_v1' : 'gym_tracker_state_v1';
 export const SERVER_URL_KEY = 'gym_tracker_server_url';
@@ -81,6 +82,7 @@ export function normalizeState(raw) {
     logs,
     goals,
     profile: normalizeProfile(raw.profile),
+    nutrition: normalizeNutrition(raw.nutrition),
   };
 }
 
