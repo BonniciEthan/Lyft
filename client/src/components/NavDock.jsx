@@ -1,9 +1,9 @@
-import { GoalIcon, ProgressIcon, SplitIcon } from './Icons.jsx';
+import { ProgressIcon, RankIcon, SplitIcon } from './Icons.jsx';
 
 export const TABS = [
   { id: 'split', label: 'My Split', Icon: SplitIcon },
   { id: 'progress', label: 'Progress', Icon: ProgressIcon },
-  { id: 'goals', label: 'Goals', Icon: GoalIcon },
+  { id: 'rank', label: 'Rank', Icon: RankIcon },
 ];
 
 export function NavDock({ active, onChange }) {

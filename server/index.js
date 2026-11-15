@@ -182,6 +182,23 @@ function validateState(s) {
     if (typeof g.achieved !== 'boolean') return `Goal "${g.id}" has invalid achieved flag`;
   }
 
+  // Lifter profile (optional; older clients don't send it).
+  if (s.profile !== undefined && s.profile !== null) {
+    const p = s.profile;
+    if (!isPlainObject(p)) return '"profile" must be an object';
+    if (p.bodyweight !== null && !(typeof p.bodyweight === 'number' && Number.isFinite(p.bodyweight) && p.bodyweight > 0)) {
+      return '"profile.bodyweight" must be a positive number or null';
+    }
+    if (!['male', 'female'].includes(p.sex)) return '"profile.sex" must be "male" or "female"';
+    if (!['kg', 'lbs'].includes(p.unit)) return '"profile.unit" must be "kg" or "lbs"';
+    if (!Array.isArray(p.bodyweightHistory)) return '"profile.bodyweightHistory" must be an array';
+    for (const h of p.bodyweightHistory) {
+      if (!isPlainObject(h) || !/^\d{4}-\d{2}-\d{2}$/.test(h.date) || !(typeof h.weightKg === 'number' && h.weightKg > 0)) {
+        return 'Invalid bodyweight history entry';
+      }
+    }
+  }
+
   return null;
 }
 
@@ -217,6 +234,7 @@ app.post('/api/sync', (req, res) => {
     workouts: incoming.workouts,
     logs: incoming.logs,
     goals: incoming.goals,
+    ...(incoming.profile ? { profile: incoming.profile } : {}),
   };
 
   try {

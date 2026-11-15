@@ -3,6 +3,10 @@ import { addDays, formatDate, relativeLabel, todayKey, weekdayName } from '../li
 import { ExerciseCard } from './ExerciseCard.jsx';
 import { ChevronLeft, ChevronRight } from './Icons.jsx';
 import { IS_LOCAL } from '../edition.js';
+import { computeRanks, diffRanks } from '../lib/rankingEngine.js';
+import { liveRankStatus } from '../lib/liveRank.js';
+import { hasBodyweight, normalizeProfile } from '../lib/lifterProfileStore.js';
+import { RankUpModal } from './RankUpModal.jsx';
 
 function freshEntry(ex) {
   return {
@@ -31,7 +35,7 @@ function buildEntries(template, log, followTemplate) {
   return [...ordered, ...log.exercises.filter((e) => !templateIds.has(e.exerciseId))];
 }
 
-export function ProgressTab({ state, update, askConfirm, onNavigate }) {
+export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
   const today = todayKey();
   const [date, setDate] = useState(today);
   const [direction, setDirection] = useState(0);
@@ -54,6 +58,32 @@ export function ProgressTab({ state, update, askConfirm, onNavigate }) {
 
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
+
+  // Rank baseline = everything logged before this day, so the pill shows what today adds.
+  const profile = useMemo(() => normalizeProfile(state.profile), [state.profile]);
+  const rankReady = hasBodyweight(profile);
+  const baseline = useMemo(
+    () => (rankReady ? computeRanks({ workouts: state.workouts, logs: state.logs }, profile, { before: date }) : null),
+    [rankReady, state.workouts, state.logs, profile, date]
+  );
+  const [rankUp, setRankUp] = useState(null);
+
+  const finishWorkout = () => {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+    // Let a pending inline edit commit before comparing.
+    setTimeout(() => {
+      if (!rankReady) {
+        toast?.('Workout logged. Add your bodyweight in Rank to track rank-ups.');
+        return;
+      }
+      const after = computeRanks(stateRef.current, profile, { through: date });
+      const diff = diffRanks(baseline, after);
+      if (diff.any) setRankUp(diff);
+      else toast?.('Workout logged. No rank changes this time.');
+    }, 0);
+  };
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const go = useCallback((delta) => {
     setDirection(delta);
@@ -230,11 +260,22 @@ export function ProgressTab({ state, update, askConfirm, onNavigate }) {
         ) : (
           <div className="exercise-list">
             {entries.map((entry) => (
-              <ExerciseCard key={entry.exerciseId} entry={entry} onEdit={editEntry} />
+              <ExerciseCard
+                key={entry.exerciseId}
+                entry={entry}
+                onEdit={editEntry}
+                live={baseline ? liveRankStatus(entry, baseline.byId[entry.exerciseId], profile, category) : null}
+              />
             ))}
+            {log && date <= today && (
+              <button type="button" className="btn btn-primary finish-btn" onClick={finishWorkout}>
+                Finish Workout
+              </button>
+            )}
           </div>
         )}
       </div>
+      <RankUpModal diff={rankUp} unit={profile.unit} onClose={() => setRankUp(null)} />
     </section>
   );
 }

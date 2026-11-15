@@ -78,14 +78,6 @@ export const ProgressIcon = (p) => (
   </svg>
 );
 
-export const GoalIcon = (p) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="5" />
-    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
-  </svg>
-);
-
 export const UploadIcon = (p) => (
   <svg {...base} {...p}>
     <path d="M12 16V4M7 9l5-5 5 5M4 17v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1" />
@@ -95,5 +87,25 @@ export const UploadIcon = (p) => (
 export const DownloadIcon = (p) => (
   <svg {...base} {...p}>
     <path d="M12 4v12M7 11l5 5 5-5M4 17v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1" />
+  </svg>
+);
+
+export const RankIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M12 2.8l7.5 2.7v6.1c0 4.6-3.2 8.2-7.5 9.6-4.3-1.4-7.5-5-7.5-9.6V5.5z" />
+    <path d="M8.5 11.5l3.5-2.6 3.5 2.6M8.5 15l3.5-2.6 3.5 2.6" />
+  </svg>
+);
+
+export const ChevronDown = (p) => (
+  <svg {...base} {...p}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+);
+
+export const SearchIcon = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
   </svg>
 );

@@ -67,7 +67,7 @@ npm run tauri:build
 Install the package from `client/src-tauri/target/release/bundle/deb/`:
 
 ```bash
-sudo apt install ./client/src-tauri/target/release/bundle/deb/Gym\ Tracker_1.0.0_amd64.deb
+sudo apt install ./client/src-tauri/target/release/bundle/deb/Lyft_1.1.0_amd64.deb
 ```
 
 On first launch, open the gear icon, set **Backend Server URL** to `http://192.168.x.x:3457` (or your Tailscale IP), tap **Test Connection**, then **Save**, and then **Load**.

@@ -9,7 +9,7 @@ import { ConfirmDialog } from './components/Modal.jsx';
 import { Toasts } from './components/Toasts.jsx';
 import { ProgressTab } from './components/ProgressTab.jsx';
 import { SplitTab } from './components/SplitTab.jsx';
-import { GoalsTab } from './components/GoalsTab.jsx';
+import { RankTab } from './components/RankTab.jsx';
 import { IS_LOCAL } from './edition.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
@@ -146,8 +146,8 @@ export default function App() {
 
       <main className="content">
         {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} />}
-        {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} />}
-        {tab === 'goals' && <GoalsTab state={state} update={update} askConfirm={askConfirm} />}
+        {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} toast={toast} />}
+        {tab === 'rank' && <RankTab state={state} update={update} />}
       </main>
 
       <NavDock active={tab} onChange={setTab} />

@@ -2,6 +2,7 @@ import { createSeedState } from '../seed.js';
 import { WEEKDAYS } from './dates.js';
 
 import { IS_LOCAL } from '../edition.js';
+import { normalizeProfile } from './lifterProfileStore.js';
 
 export const STATE_KEY = IS_LOCAL ? 'gym_tracker_local_state_v1' : 'gym_tracker_state_v1';
 export const SERVER_URL_KEY = 'gym_tracker_server_url';
@@ -79,6 +80,7 @@ export function normalizeState(raw) {
     workouts,
     logs,
     goals,
+    profile: normalizeProfile(raw.profile),
   };
 }
 

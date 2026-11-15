@@ -1,7 +1,22 @@
 import { memo } from 'react';
 import { GlassCheckbox, Stepper } from './Controls.jsx';
+import { RankCrest } from './TierCrest.jsx';
 
-function ExerciseCardImpl({ entry, onEdit }) {
+function LiveRankPill({ live }) {
+  return (
+    <span
+      key={live.tone}
+      className={`live-rank tone-${live.tone}`}
+      style={{ '--tier': live.rank.tier?.color || 'var(--text-3)' }}
+      aria-live="polite"
+    >
+      <RankCrest rank={live.rank} size={18} />
+      <span>{live.text}</span>
+    </span>
+  );
+}
+
+function ExerciseCardImpl({ entry, onEdit, live }) {
   const { sets } = entry;
 
   const setField = (i, field, value) =>
@@ -23,7 +38,10 @@ function ExerciseCardImpl({ entry, onEdit }) {
   return (
     <article className="glass-panel exercise-card">
       <header className="exercise-head">
-        <h3>{entry.name}</h3>
+        <div className="exercise-title">
+          <h3>{entry.name}</h3>
+          {live && <LiveRankPill live={live} />}
+        </div>
         <div className="set-count" aria-label="Number of sets">
           <button type="button" className="mini-btn" onClick={removeSet} disabled={sets.length <= 1} aria-label="Remove set">
             − Set

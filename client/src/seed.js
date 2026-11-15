@@ -46,6 +46,7 @@ export const SEED_STATE = {
     ],
   },
   logs: {},
+  profile: { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [] },
   goals: [
     {
       id: 'goal-1',
@@ -74,6 +75,7 @@ export const EMPTY_STATE = {
   },
   workouts: { Push: [], Pull: [], Legs: [] },
   logs: {},
+  profile: { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [] },
   goals: [],
 };
 
