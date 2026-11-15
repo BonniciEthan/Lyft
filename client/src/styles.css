@@ -222,8 +222,18 @@ input[type='date'] {
 }
 
 .topbar-local .topbar-inner {
-  justify-content: center;
+  display: grid;
+  grid-template-columns: var(--tap) 1fr var(--tap);
+  justify-items: center;
   min-height: 44px;
+}
+
+.topbar-spacer {
+  width: var(--tap);
+}
+
+.backup-open {
+  color: var(--text-2);
 }
 
 .app-title {
@@ -554,6 +564,7 @@ input[type='date'] {
 .modal-message {
   color: var(--text-2);
   font-size: 15px;
+  white-space: pre-line;
 }
 
 .modal-foot {
@@ -3358,6 +3369,77 @@ strong.m-f {
   .meal-head {
     flex-wrap: wrap;
   }
+}
+
+/* ---------------------------------------------------------------------
+   Backup & restore
+   --------------------------------------------------------------------- */
+
+.backup {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 6px;
+}
+
+.backup-intro {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.backup-stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 8px;
+  margin: 14px 0 16px;
+}
+
+.backup-stats .metric {
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.backup-stats .metric-label {
+  text-align: left;
+}
+
+.backup-summary {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.backup-last {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.backup-last.is-never {
+  color: var(--amber);
+}
+
+.backup-btn {
+  width: 100%;
+}
+
+.modal-body .backup-hint {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.backup .sheet-sub {
+  margin-top: 22px;
+}
+
+.backup-error {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.backup-version {
+  margin-top: 22px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-3);
 }
 
 /* ---------------------------------------------------------------------

@@ -160,3 +160,9 @@ export const CalendarIcon = (p) => (
     <path d="M3 9h18M8 2v4M16 2v4" />
   </svg>
 );
+
+export const BackupIcon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 8h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5V8H3zM12 11.5v6M9.5 15l2.5 2.5 2.5-2.5" />
+  </svg>
+);

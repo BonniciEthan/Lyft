@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dumbbell glyph, scaled to sit inside the adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:scaleX="0.82" android:scaleY="0.82" android:pivotX="256" android:pivotY="256">
+        <path android:fillColor="#FFF8FAFC" android:pathData="M110,196H122A14,14 0 0 1 136,210V302A14,14 0 0 1 122,316H110A14,14 0 0 1 96,302V210A14,14 0 0 1 110,196ZM160,166H172A16,16 0 0 1 188,182V330A16,16 0 0 1 172,346H160A16,16 0 0 1 144,330V182A16,16 0 0 1 160,166ZM340,166H352A16,16 0 0 1 368,182V330A16,16 0 0 1 352,346H340A16,16 0 0 1 324,330V182A16,16 0 0 1 340,166ZM390,196H402A14,14 0 0 1 416,210V302A14,14 0 0 1 402,316H390A14,14 0 0 1 376,302V210A14,14 0 0 1 390,196ZM198,240H314A10,10 0 0 1 324,250V262A10,10 0 0 1 314,272H198A10,10 0 0 1 188,262V250A10,10 0 0 1 198,240Z" />
+    </group>
+</vector>

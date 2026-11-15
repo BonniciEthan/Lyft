@@ -12,6 +12,9 @@ import { SplitTab } from './components/SplitTab.jsx';
 import { RankTab } from './components/RankTab.jsx';
 import { FoodTab } from './components/FoodTab.jsx';
 import { IS_LOCAL } from './edition.js';
+import { BackupModal } from './components/BackupModal.jsx';
+import { BackupIcon } from './components/Icons.jsx';
+import { mergeCache } from './lib/openFoodFactsService.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
 
@@ -25,6 +28,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [confirmRequest, setConfirmRequest] = useState(null);
   const confirmResolver = useRef(null);
@@ -119,6 +123,12 @@ export default function App() {
     doLoad();
   };
 
+  const handleImport = ({ state: imported, barcodeCache }) => {
+    setStore({ state: imported, hasUnsavedChanges: !IS_LOCAL });
+    mergeCache(barcodeCache);
+    toast('Backup restored');
+  };
+
   return (
     <div className="app">
       <div className="ambient" aria-hidden>
@@ -130,7 +140,11 @@ export default function App() {
       {IS_LOCAL ? (
         <header className="topbar topbar-local">
           <div className="topbar-inner">
+            <span className="topbar-spacer" aria-hidden />
             <span className="app-title">Lyft</span>
+            <button type="button" className="icon-btn glass-btn backup-open" onClick={() => setBackupOpen(true)} aria-label="Backup and restore">
+              <BackupIcon width={20} height={20} />
+            </button>
           </div>
         </header>
       ) : (
@@ -161,6 +175,14 @@ export default function App() {
           onSaved={() => toast('Server URL saved')}
         />
       )}
+      <BackupModal
+        open={backupOpen}
+        onClose={() => setBackupOpen(false)}
+        state={state}
+        onImport={handleImport}
+        askConfirm={askConfirm}
+        toast={toast}
+      />
       <ConfirmDialog request={confirmRequest} onResolve={resolveConfirm} />
       <Toasts toasts={toasts} />
     </div>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lyft_bg">#080A0F</color>
+    <color name="colorPrimary">#080A0F</color>
+    <color name="colorPrimaryDark">#080A0F</color>
+    <color name="colorAccent">#818CF8</color>
+</resources>

@@ -1,0 +1,13 @@
+{
+  "appId": "com.personal.lyft.local",
+  "appName": "Lyft Local",
+  "webDir": "dist-local",
+  "android": {
+    "backgroundColor": "#080A0F"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

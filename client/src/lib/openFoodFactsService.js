@@ -122,6 +122,23 @@ export function getCachedProduct(code, storage = defaultStorage()) {
   return null;
 }
 
+/** Merge products into the barcode cache (used when importing a backup). */
+export function mergeCache(entries, storage = defaultStorage()) {
+  if (!storage || !entries || typeof entries !== 'object') return 0;
+  try {
+    const cache = readCache(storage);
+    let added = 0;
+    for (const [code, food] of Object.entries(entries)) {
+      if (!cache[code]) added++;
+      cache[code] = { ...food, cachedAt: food.cachedAt || Date.now() };
+    }
+    storage.setItem(CACHE_KEY, JSON.stringify(cache));
+    return added;
+  } catch {
+    return 0;
+  }
+}
+
 export function cachedProducts(storage = defaultStorage()) {
   return Object.values(readCache(storage));
 }

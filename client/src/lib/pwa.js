@@ -12,8 +12,17 @@ import { isTauri } from './storage.js';
  * Only the standalone (local) edition opts in. The server edition and the desktop app
  * stay as they were. Service workers need HTTPS (or localhost) anyway.
  */
+/** True inside the Capacitor Android app, where every file is already bundled in the APK. */
+function isNativeApp() {
+  try {
+    return Boolean(window.Capacitor?.isNativePlatform?.());
+  } catch {
+    return false;
+  }
+}
+
 export function registerOfflineSupport() {
-  if (!IS_LOCAL || typeof window === 'undefined' || isTauri()) return;
+  if (!IS_LOCAL || typeof window === 'undefined' || isTauri() || isNativeApp()) return;
   const secure = window.isSecureContext && /^https?:$/.test(window.location.protocol);
   if (!secure) return;
 
