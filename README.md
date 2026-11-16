@@ -191,4 +191,4 @@ Android). It doesn't appear when Lyft is opened from the Home Screen. Once the a
 somewhere reminders work, it asks once whether to turn them on.
 
 Web reminders need the push server deployed once. See [push-worker/README.md](push-worker/README.md).
-Until `VITE_PUSH_URL` is set in `client/.env.friends`, the web app says reminders aren't set up.
+Until `VITE_PUSH_URL` is set in `client/.env.friends`, the web app hides the reminder card and doesn't mention reminders; the Android and desktop apps are unaffected.

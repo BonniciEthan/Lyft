@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from './Modal.jsx';
 import { canPromptInstall, iosBrowser, isAndroid, isIOS, isStandalone, isWebBrowser, onInstallPromptChange, promptInstall } from '../lib/platform.js';
 import { IS_LOCAL } from '../edition.js';
+import { reminderSupport } from '../lib/reminders.js';
 
 const SEEN_KEY = 'lyft_install_hint_seen_v1';
 
@@ -141,7 +142,8 @@ export function InstallSheet({ open, onClose }) {
       }
     >
       <p className="install-lead">
-        Lyft works best as an app. It opens full screen, works offline and can remind you at 9pm to log your day.
+        Lyft works best as an app. It opens full screen and works offline
+        {['push', 'needs-install'].includes(reminderSupport()) ? ', and can remind you at 9pm to log your day.' : '.'}
       </p>
       {ios ? <IOSSteps /> : canInstall ? <p className="modal-message">Tap <b>Install</b> to add Lyft to your Home screen.</p> : <AndroidSteps />}
       {ios && (

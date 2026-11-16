@@ -55,7 +55,7 @@ function useReminderToggle(toast) {
 export function ReminderCard({ toast, onShowInstall }) {
   const kind = reminderSupport();
   const { enabled, busy, turnOn, turnOff } = useReminderToggle(toast);
-  if (kind === 'unsupported' && !enabled) return null;
+  if ((kind === 'unsupported' || kind === 'unconfigured') && !enabled) return null;
 
   return (
     <section className="glass-panel card pf-reminder">

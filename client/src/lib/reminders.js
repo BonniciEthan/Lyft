@@ -61,10 +61,11 @@ export function reminderSupport() {
   if (isNativeApp()) return 'native';
   if (isTauri()) return 'desktop';
   if (!IS_LOCAL) return 'unsupported'; // server edition registers no service worker
+  // No push server configured: web reminders are switched off entirely (card and promises hidden).
+  if (!PUSH_URL || !PUSH_PUBLIC_KEY) return 'unconfigured';
   if (isIOS() && !isStandalone()) return 'needs-install';
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
   if (!window.isSecureContext) return 'unsupported';
-  if (!PUSH_URL || !PUSH_PUBLIC_KEY) return 'unconfigured';
   return 'push';
 }
 
