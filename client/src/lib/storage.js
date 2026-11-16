@@ -4,6 +4,7 @@ import { WEEKDAYS } from './dates.js';
 import { IS_LOCAL } from '../edition.js';
 import { normalizeProfile } from './lifterProfileStore.js';
 import { normalizeNutrition } from './nutritionStore.js';
+import { MUSCLE_NAME } from './rankingEngine.js';
 
 export const STATE_KEY = IS_LOCAL ? 'gym_tracker_local_state_v1' : 'gym_tracker_state_v1';
 export const SERVER_URL_KEY = 'gym_tracker_server_url';
@@ -32,6 +33,8 @@ export function normalizeState(raw) {
         id: ex.id,
         name: typeof ex.name === 'string' ? ex.name : 'Exercise',
         defaultSets: Number.isInteger(ex.defaultSets) && ex.defaultSets > 0 ? ex.defaultSets : 3,
+        // Optional manual muscle group; absent = detect from the name.
+        ...(typeof ex.muscle === 'string' && MUSCLE_NAME[ex.muscle] ? { muscle: ex.muscle } : {}),
       }));
   }
 
@@ -56,6 +59,8 @@ export function normalizeState(raw) {
               weight: numOrNull(s.weight),
               reps: numOrNull(s.reps) === null ? null : Math.round(s.reps),
               spotted: s.spotted === true,
+              // Optional reps in reserve (0–5); absent = not recorded.
+              ...(Number.isInteger(s.rir) && s.rir >= 0 && s.rir <= 5 ? { rir: s.rir } : {}),
             })),
           })),
       };

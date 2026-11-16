@@ -86,7 +86,7 @@ export const RankCalculator = forwardRef(function RankCalculator({ state, profil
               <li key={o.name}>
                 <button type="button" role="option" aria-selected={pick?.name === o.name} onClick={() => choose(o)}>
                   <span>{o.name}</span>
-                  <span className="calc-tag">{MUSCLE_NAME[classifyExercise(o.name, o.category).muscle]}</span>
+                  <span className="calc-tag">{MUSCLE_NAME[classifyExercise(o.name, o.category).muscle] || 'No muscle set'}</span>
                 </button>
               </li>
             ))}

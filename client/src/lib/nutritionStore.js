@@ -47,6 +47,16 @@ export const ACTIVITY_LEVELS = [
 ];
 
 export const MACRO_KEYS = ['calories', 'protein', 'carbs', 'fat'];
+/** Optional label values. Fibre and sugar are grams, sodium is milligrams, all per 100 g/ml. */
+export const MICRO_KEYS = ['fibre', 'sugar', 'sodium'];
+export const MICROS = {
+  fibre: { label: 'Fibre', unit: 'g' },
+  sugar: { label: 'Sugar', unit: 'g' },
+  sodium: { label: 'Sodium', unit: 'mg' },
+};
+/** 1 g of salt contains about 400 mg of sodium (EU labels list salt). */
+export const SODIUM_MG_PER_G_SALT = 400;
+export const DEFAULT_WATER_GOAL_ML = 2500;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -62,17 +72,25 @@ export function createDefaultNutrition() {
     goal: 'maintain',
     activity: 1,
     manual: { calories: null, protein: null, carbs: null, fat: null },
+    water: {},
+    waterGoal: DEFAULT_WATER_GOAL_ML,
   };
 }
 
+/** The four macros are always present; fibre, sugar and sodium only when known. */
 export function normalizePer100(raw) {
   const p = isObj(raw) ? raw : {};
-  return {
+  const out = {
     calories: nonNeg(p.calories) ?? 0,
     protein: nonNeg(p.protein) ?? 0,
     carbs: nonNeg(p.carbs) ?? 0,
     fat: nonNeg(p.fat) ?? 0,
   };
+  for (const k of MICRO_KEYS) {
+    const v = nonNeg(p[k]);
+    if (v !== null) out[k] = v;
+  }
+  return out;
 }
 
 function normalizeEntry(e) {
@@ -141,8 +159,17 @@ export function normalizeNutrition(raw) {
       id: m.id,
       name: str(m.name, 'Meal').trim() || 'Meal',
       items: (Array.isArray(m.items) ? m.items : []).map(normalizeEntry).filter(Boolean),
+      // A recipe is a saved meal that makes several servings and logs as one line.
+      ...(nonNeg(m.servings) >= 1 ? { servings: Math.min(100, Math.round(m.servings)) } : {}),
     }))
     .filter((m) => m.items.length);
+
+  if (isObj(raw.water)) {
+    for (const [date, ml] of Object.entries(raw.water)) {
+      if (DATE_RE.test(date) && nonNeg(ml) > 0) n.water[date] = Math.min(20000, Math.round(ml));
+    }
+  }
+  if (nonNeg(raw.waterGoal) >= 250 && raw.waterGoal <= 10000) n.waterGoal = Math.round(raw.waterGoal);
 
   if (GOALS[raw.goal]) n.goal = raw.goal;
   if (typeof raw.activity === 'number' && raw.activity >= 0.7 && raw.activity <= 1.6) n.activity = raw.activity;
@@ -180,6 +207,100 @@ export function sumMacros(entries) {
     for (const k of MACRO_KEYS) t[k] += m[k];
   }
   return t;
+}
+
+/**
+ * Fibre, sugar and sodium for a list of entries. `known[k]` counts the entries that
+ * carry a value, so the UI can say when a total is incomplete.
+ */
+export function sumMicros(entries) {
+  const out = { fibre: 0, sugar: 0, sodium: 0, known: { fibre: 0, sugar: 0, sodium: 0 }, count: 0 };
+  for (const e of entries || []) {
+    out.count += 1;
+    for (const k of MICRO_KEYS) {
+      const v = nonNeg(e.per100g?.[k]);
+      if (v === null) continue;
+      out[k] += (v * (nonNeg(e.grams) ?? 0)) / 100;
+      out.known[k] += 1;
+    }
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Recipes                                                              */
+/* ------------------------------------------------------------------ */
+
+export const isRecipe = (meal) => Boolean(meal && meal.servings >= 1);
+
+/**
+ * Turn a recipe into a food: per-100 g values come from the whole batch, and the
+ * default serving is the batch divided by the number of servings.
+ */
+export function recipeToFood(meal) {
+  const items = meal?.items || [];
+  const total = items.reduce((g, e) => g + (nonNeg(e.grams) ?? 0), 0);
+  if (!(total > 0)) return null;
+  const t = sumMacros(items);
+  const micro = sumMicros(items);
+  const per = (v) => Math.round((v / total) * 100 * 100) / 100;
+  const per100g = { calories: per(t.calories), protein: per(t.protein), carbs: per(t.carbs), fat: per(t.fat) };
+  // Only claim a micro value when every ingredient has one.
+  for (const k of MICRO_KEYS) if (micro.known[k] === items.length) per100g[k] = per(micro[k]);
+  const servings = Math.max(1, meal.servings || 1);
+  const portion = round1(total / servings);
+  return {
+    id: `recipe-${meal.id}`,
+    name: meal.name,
+    brand: '',
+    category: 'Recipe',
+    unit: 'g',
+    per100g,
+    servings: [
+      { label: `1 serving (${portion}g)`, grams: portion },
+      { label: '100g', grams: 100 },
+    ],
+    source: 'recipe',
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Copying                                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Copy entries to another day (mutates `nutrition`). `fromMeal` limits the copy to one
+ * meal, and `toMeal` then picks where it lands (default: the same meal). Existing
+ * entries on the target day are kept. Returns the number of entries copied.
+ */
+export function copyEntries(nutrition, { fromDate, toDate, fromMeal = null, toMeal = null, newId }) {
+  const src = nutrition?.days?.[fromDate];
+  if (!src || !DATE_RE.test(toDate)) return 0;
+  const meals = fromMeal ? [fromMeal] : MEAL_IDS;
+  const copies = [];
+  for (const m of meals) {
+    const dest = fromMeal && MEAL_IDS.includes(toMeal) ? toMeal : m;
+    for (const e of src[m] || []) copies.push([dest, { ...e, per100g: { ...e.per100g }, id: newId() }]);
+  }
+  if (!copies.length) return 0;
+  const day = (nutrition.days[toDate] ||= emptyDay());
+  for (const [dest, entry] of copies) day[dest].push(entry);
+  return copies.length;
+}
+
+/* ------------------------------------------------------------------ */
+/* Water                                                                */
+/* ------------------------------------------------------------------ */
+
+export const waterOn = (nutrition, date) => nutrition?.water?.[date] || 0;
+
+/** Add (or with a negative amount, remove) water for a day (mutates `nutrition`). */
+export function addWater(nutrition, date, ml) {
+  nutrition.water ||= {};
+  const next = Math.max(0, Math.min(20000, Math.round((nutrition.water[date] || 0) + ml)));
+  if (next > 0) nutrition.water[date] = next;
+  else delete nutrition.water[date];
+  return next;
 }
 
 export function emptyDay() {

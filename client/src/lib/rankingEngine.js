@@ -306,9 +306,15 @@ const classifyCache = new Map();
 /**
  * Map an exercise name to its movement pattern.
  * Returns { patternId, pattern, muscle, secondary, bw (leverage|null), mapped, excluded }.
+ *
+ * `muscleOverride` (a MUSCLES id) forces the muscle group; the movement pattern, and so
+ * the strength calibration, still comes from the name. A name that matches nothing and
+ * has no muscle keyword, category hint or override gets `muscle: null`: the lift still
+ * ranks on its own but counts towards no muscle group.
  */
-export function classifyExercise(name, categoryHint = '') {
-  const key = `${name}|${categoryHint}`;
+export function classifyExercise(name, categoryHint = '', muscleOverride = '') {
+  const override = MUSCLE_NAME[muscleOverride] ? muscleOverride : '';
+  const key = `${name}|${categoryHint}|${override}`;
   const hit = classifyCache.get(key);
   if (hit) return hit;
 
@@ -323,10 +329,11 @@ export function classifyExercise(name, categoryHint = '') {
       result = { patternId: rule[1], pattern, muscle: pattern.muscle, secondary: pattern.secondary || [], bw: pattern.bw ?? null, mapped: true, excluded: false };
     } else {
       const word = MUSCLE_WORDS.find(([re]) => re.test(n));
-      const muscle = word ? word[1] : CATEGORY_HINT[String(categoryHint).toLowerCase()] || 'chest';
+      const muscle = word ? word[1] : CATEGORY_HINT[String(categoryHint).toLowerCase()] || null;
       result = { patternId: 'generic', pattern: PATTERNS.generic, muscle, secondary: [], bw: null, mapped: false, excluded: false };
     }
   }
+  if (override && !result.excluded) result = { ...result, muscle: override, overridden: true };
   classifyCache.set(key, result);
   return result;
 }
@@ -477,7 +484,7 @@ export function overallScore(muscleScores) {
 function templateIndex(workouts) {
   const map = new Map();
   for (const [category, list] of Object.entries(workouts || {})) {
-    for (const ex of list || []) map.set(ex.id, { name: ex.name, category });
+    for (const ex of list || []) map.set(ex.id, { name: ex.name, category, muscle: ex.muscle || '' });
   }
   return map;
 }
@@ -495,7 +502,7 @@ function foldLog(bests, date, log, profile, templates) {
     const tpl = templates.get(entry.exerciseId);
     const name = tpl?.name || entry.name;
     const category = tpl?.category || log.category;
-    const cls = classifyExercise(name, category);
+    const cls = classifyExercise(name, category, tpl?.muscle);
     if (cls.excluded) continue;
     let rec = bests.get(entry.exerciseId);
     for (const set of entry.sets || []) {
@@ -692,6 +699,22 @@ export function getMuscleTarget(muscle, profile) {
     else lo = mid;
   }
   return { ...next, exercise: top, ...solveTarget(top.cls, top.best, hi, profile) };
+}
+
+/** The built-in exercise library: one entry per calibrated movement, tagged by muscle. */
+export const EXERCISE_LIBRARY = Object.entries(PATTERNS)
+  .filter(([id]) => id !== 'generic')
+  .map(([id, p]) => ({ id, name: p.label, muscle: p.muscle, secondary: p.secondary || [], bodyweight: Boolean(p.bw) }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+/** Search the library by name or muscle, optionally limited to one muscle group. */
+export function searchLibrary(query, muscle = '') {
+  const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
+  return EXERCISE_LIBRARY.filter((e) => {
+    if (muscle && e.muscle !== muscle) return false;
+    const hay = `${e.name} ${MUSCLE_NAME[e.muscle]}`.toLowerCase();
+    return words.every((w) => hay.includes(w));
+  });
 }
 
 /** Every exercise name the calculator can offer: routines, logs, then the standard library. */

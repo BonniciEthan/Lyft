@@ -7,6 +7,7 @@ import { computeRanks, diffRanks } from '../lib/rankingEngine.js';
 import { liveRankStatus } from '../lib/liveRank.js';
 import { hasBodyweight, normalizeProfile } from '../lib/lifterProfileStore.js';
 import { RankUpModal } from './RankUpModal.jsx';
+import { lastSessions } from '../lib/history.js';
 
 function freshEntry(ex) {
   return {
@@ -67,6 +68,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
     [rankReady, state.workouts, state.logs, profile, date]
   );
   const [rankUp, setRankUp] = useState(null);
+  const lastByExercise = useMemo(() => lastSessions(state.logs, date), [state.logs, date]);
 
   const finishWorkout = () => {
     if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
@@ -133,7 +135,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
   };
 
   const editEntry = useCallback(
-    (exerciseId, mutate) => {
+    (exerciseId, mutate, opts) => {
       const cat = category;
       update((draft) => {
         let dayLog = draft.logs[date];
@@ -152,7 +154,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
         const tpl = draft.workouts[dayLog.category]?.find((ex) => ex.id === exerciseId);
         if (tpl && date >= todayKey()) entry.name = tpl.name;
         mutate(entry);
-      });
+      }, opts);
     },
     [category, date, update]
   );
@@ -172,9 +174,12 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
       destructive: true,
     });
     if (ok) {
-      update((draft) => {
-        delete draft.logs[date];
-      });
+      update(
+        (draft) => {
+          delete draft.logs[date];
+        },
+        { undo: `Cleared ${formatDate(date)}` }
+      );
     }
   };
 
@@ -205,13 +210,11 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
             Today
           </button>
         )}
-        {offSchedule && (
-          <>
-            <span className="cal-note">Scheduled: {scheduled}</span>
-            <button type="button" className="link-btn" onClick={clearDay}>
-              Clear day
-            </button>
-          </>
+        {offSchedule && <span className="cal-note">Scheduled: {scheduled}</span>}
+        {log && (
+          <button type="button" className="link-btn" onClick={clearDay}>
+            Clear day
+          </button>
         )}
       </div>
 
@@ -265,6 +268,9 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
                 entry={entry}
                 onEdit={editEntry}
                 live={baseline ? liveRankStatus(entry, baseline.byId[entry.exerciseId], profile, category) : null}
+                unit={profile.unit}
+                last={lastByExercise.get(entry.exerciseId)}
+                today={today}
               />
             ))}
             {log && date <= today && (

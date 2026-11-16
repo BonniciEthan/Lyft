@@ -58,6 +58,14 @@ export function normalizeProduct(product, fallbackCode = '') {
     const label = String(product.serving_size || '').trim();
     servings.push({ label: label ? `1 serving (${label})` : `1 serving (${round1(sq)}${unit})`, grams: round1(sq) });
   }
+  // Optional label values. OFF reports these in grams; sodium is stored in milligrams.
+  const micros = {};
+  const fibre = num(n.fiber_100g);
+  const sugar = num(n.sugars_100g);
+  const sodiumG = num(n.sodium_100g) ?? (num(n.salt_100g) !== null ? num(n.salt_100g) / 2.5 : null);
+  if (fibre !== null && fibre >= 0) micros.fibre = round1(fibre);
+  if (sugar !== null && sugar >= 0) micros.sugar = round1(sugar);
+  if (sodiumG !== null && sodiumG >= 0) micros.sodium = Math.round(sodiumG * 1000);
   return {
     id: `off-${code}`,
     barcode: code,
@@ -70,6 +78,7 @@ export function normalizeProduct(product, fallbackCode = '') {
       protein: round1(num(n.proteins_100g) ?? 0),
       carbs: round1(num(n.carbohydrates_100g) ?? 0),
       fat: round1(num(n.fat_100g) ?? 0),
+      ...micros,
     },
     servings,
     source: 'off',

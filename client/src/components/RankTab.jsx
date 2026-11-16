@@ -11,6 +11,7 @@ import { Bodygraph, TierLegend } from './Bodygraph.jsx';
 import { StrengthChart } from './StrengthChart.jsx';
 import { RankCalculator } from './RankCalculator.jsx';
 import { LpBar } from './RankBits.jsx';
+import { GoalsCard } from './GoalsCard.jsx';
 
 const SEX_OPTIONS = [
   { value: 'male', label: 'Male' },
@@ -358,6 +359,8 @@ export function RankTab({ state, update }) {
           />
         </>
       )}
+
+      <GoalsCard state={state} update={update} unit={profile.unit} />
     </section>
   );
 }

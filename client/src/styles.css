@@ -1295,7 +1295,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .set-row {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) var(--tap);
+  grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) 34px var(--tap);
   align-items: center;
   gap: 4px;
   padding: 3px;
@@ -3456,7 +3456,7 @@ strong.m-f {
   }
 
   .set-row {
-    grid-template-columns: 18px minmax(0, 1fr) minmax(0, 1fr) var(--tap);
+    grid-template-columns: 16px minmax(0, 1fr) minmax(0, 1fr) 30px 40px;
     gap: 2px;
     padding: 2px;
   }
@@ -3504,7 +3504,7 @@ strong.m-f {
   }
 
   .set-row {
-    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 72px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 52px 72px;
     gap: 10px;
     padding: 4px 8px;
   }
@@ -3991,4 +3991,391 @@ strong.m-f {
   .attendance {
     --cell: 12px;
   }
+}
+
+/* ---------------------------------------------------------------------
+   Set logging: RIR, last-time numbers, toast actions
+   --------------------------------------------------------------------- */
+
+.rir-btn {
+  width: 100%;
+  max-width: 44px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-3);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.rir-btn.is-set {
+  color: var(--text);
+  background: rgba(129, 140, 248, 0.16);
+  border-color: rgba(165, 180, 252, 0.3);
+}
+
+.last-time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 3px 8px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.last-time-label {
+  font-weight: 600;
+}
+
+.last-time-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.last-set {
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.last-time-fill {
+  flex: none;
+}
+
+.toast.has-action {
+  pointer-events: auto;
+  padding-right: 8px;
+}
+
+.toast-action {
+  margin-left: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: rgba(165, 180, 252, 0.18);
+  color: rgb(199, 210, 254);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   Exercise library, muscle override, merge
+   --------------------------------------------------------------------- */
+
+.routine-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0 0 32px;
+}
+
+.muscle-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.muscle-select {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.muscle-select option {
+  color: #0f172a;
+}
+
+.muscle-pick.needs-muscle .muscle-select {
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+.muscle-warning {
+  padding-left: 32px;
+  color: rgb(252, 211, 77);
+}
+
+.suggest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.library-open {
+  align-self: flex-start;
+}
+
+.library-filters {
+  margin: 10px 0;
+}
+
+.library-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.library-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--r-row);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.library-row:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.library-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.library-tags {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.library-add {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgb(165, 180, 252);
+  white-space: nowrap;
+}
+
+.muscle-tag {
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: rgba(129, 140, 248, 0.18);
+  color: rgb(199, 210, 254);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.muscle-tag.is-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-2);
+}
+
+/* ---------------------------------------------------------------------
+   Food: micronutrients, water, recipes
+   --------------------------------------------------------------------- */
+
+.micro-line {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.portion-micros {
+  display: block;
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.micro-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.micro-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.micro-total strong {
+  font-size: 15px;
+}
+
+.micro-note {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.water-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.water-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.water-title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.water-top strong {
+  color: var(--text);
+}
+
+.water-fill {
+  background: linear-gradient(90deg, rgb(56, 189, 248), rgb(14, 165, 233));
+}
+
+.water-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.water-goal {
+  margin-left: auto;
+}
+
+.meal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.recipe-new {
+  align-self: flex-start;
+  margin: 8px 0;
+}
+
+.recipe-items .entry-main {
+  cursor: default;
+}
+
+.recipe-total {
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------------
+   Goals
+   --------------------------------------------------------------------- */
+
+.goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.goal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--r-row);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.goal-row.is-done {
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.goal-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-name {
+  font-size: 15px;
+  font-weight: 650;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.goal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: rgba(52, 211, 153, 0.16);
+  color: var(--emerald);
+  font-size: 11px;
+  font-weight: 650;
+  flex: none;
+}
+
+.goal-actions {
+  display: flex;
+  margin-left: auto;
+  flex: none;
+}
+
+.goal-numbers {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.goal-numbers strong {
+  font-size: 18px;
+  color: var(--text);
+}
+
+.goal-fill {
+  background: linear-gradient(90deg, rgb(129, 140, 248), rgb(52, 211, 153));
+}
+
+.goal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.goal-notes {
+  font-style: italic;
 }

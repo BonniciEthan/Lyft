@@ -5,6 +5,14 @@ import {
   GOALS,
   MEALS,
   MEAL_IDS,
+  MICROS,
+  MICRO_KEYS,
+  addWater,
+  copyEntries,
+  isRecipe,
+  recipeToFood,
+  sumMicros,
+  waterOn,
   dayEntries,
   dayTotals,
   emptyDay,
@@ -24,7 +32,9 @@ import { uid } from '../lib/storage.js';
 import { Segmented } from './Controls.jsx';
 import { BarcodeIcon, BookmarkIcon, CalendarIcon, ChevronLeft, ChevronRight, CopyIcon, EditIcon, PlusIcon, TrashIcon } from './Icons.jsx';
 import { BarcodeScannerModal } from './BarcodeScannerModal.jsx';
-import { CustomFoodModal, FoodSearchModal, MacroLine, PortionPicker, SavePresetModal, TargetsModal } from './FoodModals.jsx';
+import { CopyModal, CustomFoodModal, FoodSearchModal, MacroLine, PortionPicker, RecipeModal, SavePresetModal, TargetsModal } from './FoodModals.jsx';
+
+const WATER_GOALS = [1500, 2000, 2500, 3000, 3500, 4000];
 
 const r0 = (n) => Math.round(n);
 const r1 = (n) => Math.round(n * 10) / 10;
@@ -135,7 +145,68 @@ function SetupCard({ profile, onBodyweight, onSex, onManual }) {
   );
 }
 
-function SummaryCard({ totals, targets, goal, onGoal, onEdit }) {
+/** Fibre / sugar / sodium totals for the day, flagged when some foods have no data. */
+function MicroTotals({ micro }) {
+  if (!micro.count) return null;
+  const gaps = MICRO_KEYS.filter((k) => micro.known[k] > 0 && micro.known[k] < micro.count).map((k) => MICROS[k].label.toLowerCase());
+  return (
+    <div className="micro-totals">
+      {MICRO_KEYS.map((k) => (
+        <div key={k} className="micro-total">
+          <span className="metric-label">{MICROS[k].label}</span>
+          <strong className="tabular">
+            {micro.known[k] ? `${k === 'sodium' ? fmt(micro[k]) : r1(micro[k])} ${MICROS[k].unit}` : '–'}
+          </strong>
+        </div>
+      ))}
+      {gaps.length > 0 && (
+        <span className="micro-note">
+          Not every food lists {gaps.join(' or ')}, so {gaps.length === 1 ? 'that total is' : 'those totals are'} a minimum.
+        </span>
+      )}
+    </div>
+  );
+}
+
+function WaterCard({ ml, goal, onAdd, onGoal }) {
+  const pct = goal > 0 ? Math.min(ml / goal, 1) : 0;
+  return (
+    <div className="glass-panel card water-card">
+      <div className="water-top">
+        <span className="water-title">Water</span>
+        <span className="tabular">
+          <strong>{fmt(ml)}</strong> / {fmt(goal)} ml
+        </span>
+      </div>
+      <div className="progress-track water-track">
+        <span className="progress-fill water-fill" style={{ transform: `scaleX(${pct})` }} />
+      </div>
+      <div className="water-actions">
+        <button type="button" className="chip chip-sm" onClick={() => onAdd(-250)} disabled={!ml} aria-label="Remove 250 ml of water">
+          −250
+        </button>
+        <button type="button" className="chip chip-sm" onClick={() => onAdd(250)} aria-label="Add 250 ml of water">
+          +250 ml
+        </button>
+        <button type="button" className="chip chip-sm" onClick={() => onAdd(500)} aria-label="Add 500 ml of water">
+          +500 ml
+        </button>
+        <label className="muscle-pick water-goal">
+          <span>Goal</span>
+          <select className="muscle-select" value={goal} onChange={(e) => onGoal(Number(e.target.value))} aria-label="Daily water goal">
+            {[...new Set([...WATER_GOALS, goal])].sort((a, b) => a - b).map((g) => (
+              <option key={g} value={g}>
+                {g / 1000} L
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function SummaryCard({ totals, targets, goal, onGoal, onEdit, micro }) {
   const left = targets.calories - totals.calories;
   return (
     <div className="glass-panel card food-summary">
@@ -159,6 +230,7 @@ function SummaryCard({ totals, targets, goal, onGoal, onEdit }) {
         <MacroBar label="Carbs" tone="carbs" eaten={totals.carbs} target={targets.carbs} />
         <MacroBar label="Fat" tone="fat" eaten={totals.fat} target={targets.fat} />
       </div>
+      <MicroTotals micro={micro} />
     </div>
   );
 }
@@ -167,7 +239,7 @@ function SummaryCard({ totals, targets, goal, onGoal, onEdit }) {
 /* Meal card                                                            */
 /* ------------------------------------------------------------------ */
 
-function MealCard({ meal, entries, onAdd, onScan, onEdit, onDelete, onSavePreset }) {
+function MealCard({ meal, entries, onAdd, onScan, onEdit, onDelete, onSavePreset, onCopy }) {
   const t = sumMacros(entries);
   return (
     <section className="glass-panel meal-card" aria-label={meal.label}>
@@ -213,11 +285,16 @@ function MealCard({ meal, entries, onAdd, onScan, onEdit, onDelete, onSavePreset
           })}
         </ul>
       )}
-      {entries.length > 1 && (
+      {entries.length > 0 && (
         <div className="meal-foot">
-          <button type="button" className="link-btn" onClick={onSavePreset}>
-            <BookmarkIcon width={14} height={14} className="inline-icon" /> Save as preset
+          <button type="button" className="link-btn" onClick={onCopy}>
+            <CopyIcon width={14} height={14} className="inline-icon" /> Copy to…
           </button>
+          {entries.length > 1 && (
+            <button type="button" className="link-btn" onClick={onSavePreset}>
+              <BookmarkIcon width={14} height={14} className="inline-icon" /> Save as preset
+            </button>
+          )}
         </div>
       )}
     </section>
@@ -233,6 +310,9 @@ export function FoodTab({ state, update, askConfirm, toast }) {
   const [date, setDate] = useState(today);
   const [direction, setDirection] = useState(0);
   const [sheet, setSheet] = useState(null);
+  // Non-null while a recipe is being built: foods picked then go into it, not the diary.
+  const [recipeDraft, setRecipeDraft] = useState(null);
+  const closeSheet = () => setSheet(recipeDraft ? { type: 'recipe' } : null);
   const [searchQuery, setSearchQuery] = useState('');
   const [cacheVersion, setCacheVersion] = useState(0);
   const dateInput = useRef(null);
@@ -249,17 +329,18 @@ export function FoodTab({ state, update, askConfirm, toast }) {
     const cached = sheet ? cachedProducts() : [];
     const custom = nutrition.foods;
     const customBarcodes = new Set(custom.map((f) => f.barcode).filter(Boolean));
-    return [...custom, ...cached.filter((f) => !customBarcodes.has(f.barcode)), ...FOODS];
+    const recipes = nutrition.meals.filter(isRecipe).map(recipeToFood).filter(Boolean);
+    return [...recipes, ...custom, ...cached.filter((f) => !customBarcodes.has(f.barcode)), ...FOODS];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nutrition.foods, cacheVersion, Boolean(sheet)]);
+  }, [nutrition.foods, nutrition.meals, cacheVersion, Boolean(sheet)]);
   const catalogById = useMemo(() => new Map(catalog.map((f) => [f.id, f])), [catalog]);
 
   const updateNutrition = useCallback(
-    (mutate) =>
+    (mutate, opts) =>
       update((draft) => {
         draft.nutrition = normalizeNutrition(draft.nutrition);
         mutate(draft.nutrition);
-      }),
+      }, opts),
     [update]
   );
 
@@ -323,12 +404,17 @@ export function FoodTab({ state, update, askConfirm, toast }) {
   const mealLabel = (id) => MEALS.find((m) => m.id === id)?.label || 'Meal';
 
   const logFood = (food, grams, meal) => {
+    if (recipeDraft) {
+      setRecipeDraft((d) => ({ ...d, items: [...d.items, makeEntry(food, grams, uid('mi'))] }));
+      setSheet({ type: 'recipe' });
+      return;
+    }
     updateNutrition((n) => {
       const d = (n.days[date] ||= emptyDay());
       d[meal].push(makeEntry(food, grams, uid('fe')));
     });
     toast(`Added ${food.name} to ${mealLabel(meal)}`);
-    setSheet(null);
+    closeSheet();
   };
 
   const updateEntry = (entry, grams, meal, fromMeal) => {
@@ -342,17 +428,49 @@ export function FoodTab({ state, update, askConfirm, toast }) {
       if (meal === fromMeal) list.splice(i, 0, item);
       else d[meal].push(item);
     });
-    setSheet(null);
+    closeSheet();
   };
 
   const deleteEntry = (entry, meal) => {
-    updateNutrition((n) => {
-      const d = n.days[date];
-      if (!d) return;
-      d[meal] = d[meal].filter((x) => x.id !== entry.id);
-      if (!dayEntries(d).length) delete n.days[date];
+    updateNutrition(
+      (n) => {
+        const d = n.days[date];
+        if (!d) return;
+        d[meal] = d[meal].filter((x) => x.id !== entry.id);
+        if (!dayEntries(d).length) delete n.days[date];
+      },
+      { undo: `Removed ${entry.name}` }
+    );
+  };
+
+  const copyTo = (toDate, fromMeal, toMeal) => {
+    const count = fromMeal ? day[fromMeal].length : dayEntries(day).length;
+    closeSheet();
+    if (!count || toDate === date && (!fromMeal || toMeal === fromMeal)) {
+      toast(count ? 'Pick a different day or meal to copy to' : 'Nothing to copy', 'error');
+      return;
+    }
+    updateNutrition((n) => copyEntries(n, { fromDate: date, toDate, fromMeal, toMeal, newId: () => uid('fe') }), {
+      undo: `Copied ${count} item${count === 1 ? '' : 's'} to ${formatDate(toDate)}`,
     });
-    toast(`Removed ${entry.name}`);
+  };
+
+  const saveRecipe = () => {
+    const draft = recipeDraft;
+    const recipe = { id: draft.id || uid('meal'), name: draft.name.trim(), servings: draft.servings, items: draft.items };
+    updateNutrition((n) => {
+      const i = n.meals.findIndex((m) => m.id === recipe.id);
+      if (i >= 0) n.meals[i] = recipe;
+      else n.meals.push(recipe);
+    });
+    setRecipeDraft(null);
+    setSheet(null);
+    toast(`Saved recipe “${recipe.name}”`);
+  };
+
+  const startRecipe = (meal = null) => {
+    setRecipeDraft(meal ? { id: meal.id, name: meal.name, servings: meal.servings || 1, items: meal.items } : { id: null, name: '', servings: 4, items: [] });
+    setSheet({ type: 'recipe' });
   };
 
   const copyPreviousDay = async () => {
@@ -383,21 +501,26 @@ export function FoodTab({ state, update, askConfirm, toast }) {
       n.meals.push({ id: uid('meal'), name, items: items.map((e) => ({ ...e, id: uid('mi') })) });
     });
     toast(`Saved preset “${name}”`);
-    setSheet(null);
+    closeSheet();
   };
 
   const logPreset = (preset, meal) => {
+    if (recipeDraft) {
+      setRecipeDraft((d) => ({ ...d, items: [...d.items, ...preset.items.map((e) => ({ ...e, id: uid('mi') }))] }));
+      setSheet({ type: 'recipe' });
+      return;
+    }
     updateNutrition((n) => {
       const d = (n.days[date] ||= emptyDay());
       for (const e of preset.items) d[meal].push({ ...e, id: uid('fe') });
     });
     toast(`Added “${preset.name}” to ${mealLabel(meal)}`);
-    setSheet(null);
+    closeSheet();
   };
 
   const deletePreset = async (preset) => {
     const ok = await askConfirm({ title: 'Delete preset?', message: `Delete the saved meal “${preset.name}”?`, confirmLabel: 'Delete', destructive: true });
-    if (ok) updateNutrition((n) => (n.meals = n.meals.filter((m) => m.id !== preset.id)));
+    if (ok) updateNutrition((n) => (n.meals = n.meals.filter((m) => m.id !== preset.id)), { undo: `Deleted “${preset.name}”` });
   };
 
   const deleteCustom = async (food) => {
@@ -492,7 +615,14 @@ export function FoodTab({ state, update, askConfirm, toast }) {
 
       <div key={date} className={`day-content slide-${direction > 0 ? 'left' : direction < 0 ? 'right' : 'none'}`}>
         {targets ? (
-          <SummaryCard totals={totals} targets={targets} goal={nutrition.goal} onGoal={setGoal} onEdit={() => setSheet({ type: 'targets' })} />
+          <SummaryCard
+            totals={totals}
+            targets={targets}
+            goal={nutrition.goal}
+            onGoal={setGoal}
+            onEdit={() => setSheet({ type: 'targets' })}
+            micro={sumMicros(dayEntries(day))}
+          />
         ) : (
           <SetupCard
             profile={profile}
@@ -505,9 +635,24 @@ export function FoodTab({ state, update, askConfirm, toast }) {
           />
         )}
 
+        <WaterCard
+          ml={waterOn(nutrition, date)}
+          goal={nutrition.waterGoal}
+          onAdd={(ml) => updateNutrition((n) => addWater(n, date, ml))}
+          onGoal={(g) => updateNutrition((n) => (n.waterGoal = g))}
+        />
+
         <div className="food-quick">
           <button type="button" className="chip chip-sm" onClick={copyPreviousDay}>
             <CopyIcon width={15} height={15} /> Copy previous day
+          </button>
+          {dayEntries(day).length > 0 && (
+            <button type="button" className="chip chip-sm" onClick={() => setSheet({ type: 'copy', meal: null })}>
+              <CopyIcon width={15} height={15} /> Copy day to…
+            </button>
+          )}
+          <button type="button" className="chip chip-sm" onClick={() => startRecipe()}>
+            <PlusIcon width={15} height={15} /> New recipe
           </button>
           <button type="button" className="chip chip-sm" onClick={() => setSheet({ type: 'scan', meal: defaultMeal()})}>
             <BarcodeIcon width={15} height={15} /> Scan
@@ -525,6 +670,7 @@ export function FoodTab({ state, update, askConfirm, toast }) {
               onEdit={(entry) => setSheet({ type: 'portion', meal: meal.id, fromMeal: meal.id, entry, food: catalogById.get(entry.foodId) ? { ...catalogById.get(entry.foodId), per100g: entry.per100g, unit: entry.unit } : entryToFood(entry) })}
               onDelete={(entry) => deleteEntry(entry, meal.id)}
               onSavePreset={() => setSheet({ type: 'savePreset', meal: meal.id })}
+              onCopy={() => setSheet({ type: 'copy', meal: meal.id })}
             />
           ))}
         </div>
@@ -532,7 +678,7 @@ export function FoodTab({ state, update, askConfirm, toast }) {
 
       <FoodSearchModal
         open={sheet?.type === 'search'}
-        onClose={() => setSheet(null)}
+        onClose={() => closeSheet()}
         meal={sheet?.meal}
         catalog={catalog}
         catalogById={catalogById}
@@ -548,6 +694,31 @@ export function FoodTab({ state, update, askConfirm, toast }) {
         onDeleteCustom={deleteCustom}
         onCreateCustom={(data) => createCustom(data, sheet.meal)}
         onScan={() => setSheet({ type: 'scan', meal: sheet.meal })}
+        title={recipeDraft ? 'Add ingredient' : undefined}
+        onPickRecipe={(m) => setSheet({ type: 'portion', meal: sheet.meal, food: recipeToFood(m), from: 'search' })}
+        onNewRecipe={recipeDraft ? null : () => startRecipe()}
+        onEditRecipe={recipeDraft ? null : startRecipe}
+      />
+
+      <RecipeModal
+        open={sheet?.type === 'recipe'}
+        draft={recipeDraft}
+        onChange={setRecipeDraft}
+        onAddIngredient={() => setSheet({ type: 'search', meal: defaultMeal() })}
+        onClose={() => {
+          setRecipeDraft(null);
+          setSheet(null);
+        }}
+        onSave={saveRecipe}
+      />
+
+      <CopyModal
+        open={sheet?.type === 'copy'}
+        onClose={closeSheet}
+        fromMeal={sheet?.type === 'copy' ? sheet.meal : null}
+        count={sheet?.type === 'copy' ? (sheet.meal ? day[sheet.meal].length : dayEntries(day).length) : 0}
+        defaultDate={date === today ? addDays(today, 1) : today}
+        onCopy={(toDate, toMeal) => copyTo(toDate, sheet.meal, toMeal)}
       />
 
       <PortionPicker
@@ -556,28 +727,29 @@ export function FoodTab({ state, update, askConfirm, toast }) {
         food={portionFood}
         entry={sheet?.entry}
         meal={sheet?.meal}
-        onMealChange={(meal) => setSheet((s) => ({ ...s, meal }))}
-        onClose={() => setSheet(null)}
+        onMealChange={recipeDraft ? null : (meal) => setSheet((s) => ({ ...s, meal }))}
+        submitLabel={recipeDraft ? 'Add to Recipe' : undefined}
+        onClose={() => closeSheet()}
         onBack={sheet?.from === 'search' ? () => setSheet({ type: 'search', meal: sheet.meal }) : null}
         onSubmit={(grams) => (sheet.entry ? updateEntry(sheet.entry, grams, sheet.meal, sheet.fromMeal) : logFood(sheet.food, grams, sheet.meal))}
         onDelete={() => {
           deleteEntry(sheet.entry, sheet.fromMeal);
-          setSheet(null);
+          closeSheet();
         }}
       />
 
-      <BarcodeScannerModal open={sheet?.type === 'scan'} onClose={() => setSheet(null)} onDetected={(code) => handleBarcode(code, sheet.meal)} />
+      <BarcodeScannerModal open={sheet?.type === 'scan'} onClose={() => closeSheet()} onDetected={(code) => handleBarcode(code, sheet.meal)} />
 
       <CustomFoodModal
         open={sheet?.type === 'custom'}
         prefill={sheet?.prefill}
-        onClose={() => setSheet(null)}
+        onClose={() => closeSheet()}
         onSave={(data) => createCustom(data, sheet.meal)}
       />
 
       <TargetsModal
         open={sheet?.type === 'targets'}
-        onClose={() => setSheet(null)}
+        onClose={() => closeSheet()}
         nutrition={nutrition}
         profile={profile}
         onSave={({ goal, activity, manual }) => {
@@ -586,14 +758,14 @@ export function FoodTab({ state, update, askConfirm, toast }) {
             n.activity = activity;
             n.manual = manual;
           });
-          setSheet(null);
+          closeSheet();
           toast('Targets updated');
         }}
       />
 
       <SavePresetModal
         open={sheet?.type === 'savePreset'}
-        onClose={() => setSheet(null)}
+        onClose={() => closeSheet()}
         defaultName={presetMeal ? `${mealLabel(presetMeal)} · ${formatDate(date)}` : ''}
         items={presetMeal ? day[presetMeal] : []}
         onSave={(name) => savePreset(name, day[presetMeal])}

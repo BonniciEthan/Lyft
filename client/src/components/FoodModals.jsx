@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from './Modal.jsx';
-import { Segmented } from './Controls.jsx';
-import { BarcodeIcon, BookmarkIcon, SearchIcon, TrashIcon } from './Icons.jsx';
+import { Segmented, Stepper } from './Controls.jsx';
+import { BarcodeIcon, BookmarkIcon, EditIcon, PlusIcon, SearchIcon, TrashIcon } from './Icons.jsx';
 import {
   ACTIVITY_LEVELS,
   GOALS,
   MACRO_KEYS,
   MEALS,
+  MICROS,
+  MICRO_KEYS,
+  SODIUM_MG_PER_G_SALT,
   computeAutoTargets,
+  entryMacros,
+  isRecipe,
   macrosFor,
   recentFoods,
   searchFoods,
@@ -29,6 +34,16 @@ export function MacroLine({ m, className = '' }) {
       <span className="m-f">F {r1(m.fat)}</span>
     </span>
   );
+}
+
+/** "Fibre 3.2 g · Sugar 12 g · Sodium 240 mg" for the values a food actually has. */
+export function MicroLine({ per100g, grams = 100, className = '' }) {
+  const parts = MICRO_KEYS.filter((k) => typeof per100g?.[k] === 'number').map((k) => {
+    const v = (per100g[k] * grams) / 100;
+    return `${MICROS[k].label} ${k === 'sodium' ? r0(v) : r1(v)} ${MICROS[k].unit}`;
+  });
+  if (!parts.length) return null;
+  return <span className={`micro-line tabular ${className}`}>{parts.join(' · ')}</span>;
 }
 
 function FoodRow({ food, onPick, onDelete, badge }) {
@@ -80,6 +95,10 @@ export function FoodSearchModal({
   onDeleteCustom,
   onCreateCustom,
   onScan,
+  title,
+  onPickRecipe,
+  onNewRecipe,
+  onEditRecipe,
 }) {
   const [tab, setTab] = useState('search');
   const [query, setQuery] = useState(initialQuery);
@@ -168,7 +187,7 @@ export function FoodSearchModal({
   const onlineStale = online.query !== q;
 
   return (
-    <Modal open={open} onClose={onClose} title={`Add to ${mealLabel}`} size="sheet modal-food">
+    <Modal open={open} onClose={onClose} title={title || `Add to ${mealLabel}`} size="sheet modal-food">
       <Segmented
         small
         label="Add food mode"
@@ -227,35 +246,50 @@ export function FoodSearchModal({
           </div>
 
           {filter === 'Saved Meals' ? (
-            savedMeals.length ? (
-              <ul className="food-list">
-                {savedMeals.map((m) => {
-                  const t = sumMacros(m.items);
-                  return (
-                    <li key={m.id} className="food-row">
-                      <button type="button" className="food-row-main" onClick={() => onLogPreset(m)}>
-                        <span className="food-row-name">
-                          <BookmarkIcon width={14} height={14} className="inline-icon" /> {m.name}
+            <>
+              {onNewRecipe && (
+                <button type="button" className="btn btn-glass btn-subtle recipe-new" onClick={onNewRecipe}>
+                  <PlusIcon width={16} height={16} /> New recipe
+                </button>
+              )}
+              {savedMeals.length ? (
+                <ul className="food-list">
+                  {savedMeals.map((m) => {
+                    const recipe = isRecipe(m);
+                    const whole = sumMacros(m.items);
+                    const div = recipe ? m.servings : 1;
+                    const t = { calories: whole.calories / div, protein: whole.protein / div, carbs: whole.carbs / div, fat: whole.fat / div };
+                    return (
+                      <li key={m.id} className="food-row">
+                        <button type="button" className="food-row-main" onClick={() => (recipe ? onPickRecipe(m) : onLogPreset(m))}>
+                          <span className="food-row-name">
+                            <BookmarkIcon width={14} height={14} className="inline-icon" /> {m.name}
+                          </span>
+                          <span className="food-row-sub">
+                            <span className="food-badge">{recipe ? `Recipe · serves ${m.servings}` : `${m.items.length} items`}</span>
+                            <MacroLine m={t} />
+                          </span>
+                        </button>
+                        <span className="food-row-kcal tabular">
+                          {fmtKcal(t.calories)}
+                          <small>{recipe ? 'kcal/serving' : 'kcal'}</small>
                         </span>
-                        <span className="food-row-sub">
-                          <span className="food-badge">{m.items.length} items</span>
-                          <MacroLine m={t} />
-                        </span>
-                      </button>
-                      <span className="food-row-kcal tabular">
-                        {fmtKcal(t.calories)}
-                        <small>kcal</small>
-                      </span>
-                      <button type="button" className="icon-btn food-row-del" onClick={() => onDeletePreset(m)} aria-label={`Delete ${m.name}`}>
-                        <TrashIcon width={18} height={18} />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="food-empty muted">No saved meals yet. Log a meal, then tap “Save as preset” on its card.</p>
-            )
+                        {recipe && onEditRecipe && (
+                          <button type="button" className="icon-btn food-row-del" onClick={() => onEditRecipe(m)} aria-label={`Edit ${m.name}`}>
+                            <EditIcon width={18} height={18} />
+                          </button>
+                        )}
+                        <button type="button" className="icon-btn food-row-del" onClick={() => onDeletePreset(m)} aria-label={`Delete ${m.name}`}>
+                          <TrashIcon width={18} height={18} />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="food-empty muted">No saved meals yet. Build a recipe above, or log a meal and tap “Save as preset” on its card.</p>
+              )}
+            </>
           ) : (
             <>
               {!q && filter === 'All' && local.length > 0 && <div className="sheet-sub">Frequent &amp; recent</div>}
@@ -266,7 +300,7 @@ export function FoodSearchModal({
                       key={f.id}
                       food={f}
                       onPick={onPick}
-                      badge={f.source === 'custom' ? 'Custom' : f.source === 'off' ? 'Packaged' : null}
+                      badge={f.source === 'custom' ? 'Custom' : f.source === 'off' ? 'Packaged' : f.source === 'recipe' ? 'Recipe' : null}
                       onDelete={filter === 'Custom' ? onDeleteCustom : null}
                     />
                   ))}
@@ -333,7 +367,16 @@ export function CustomFoodForm({ prefill = {}, onSave, submitLabel = 'Save & Log
   const [brand, setBrand] = useState(prefill.brand || '');
   const [unit, setUnit] = useState(prefill.unit || 'g');
   const [energyUnit, setEnergyUnit] = useState('kcal');
-  const [vals, setVals] = useState({ energy: '', protein: '', carbs: '', fat: '' });
+  const pre = prefill.per100g || {};
+  const [vals, setVals] = useState({
+    energy: '',
+    protein: '',
+    carbs: '',
+    fat: '',
+    fibre: pre.fibre != null ? String(pre.fibre) : '',
+    sugar: pre.sugar != null ? String(pre.sugar) : '',
+    salt: pre.sodium != null ? String(Math.round((pre.sodium / SODIUM_MG_PER_G_SALT) * 100) / 100) : '',
+  });
   const [serving, setServing] = useState({ label: '', grams: '' });
   const [barcode, setBarcode] = useState(prefill.barcode || '');
   const [error, setError] = useState('');
@@ -347,6 +390,9 @@ export function CustomFoodForm({ prefill = {}, onSave, submitLabel = 'Save & Log
     if (!name.trim()) return setError('Give the food a name.');
     if (kcal === null) return setError(`Enter the energy per 100${unit} from the label.`);
     const per100g = { calories: kcal, protein: toNum(vals.protein) ?? 0, carbs: toNum(vals.carbs) ?? 0, fat: toNum(vals.fat) ?? 0 };
+    if (vals.fibre !== '' && toNum(vals.fibre) !== null) per100g.fibre = toNum(vals.fibre);
+    if (vals.sugar !== '' && toNum(vals.sugar) !== null) per100g.sugar = toNum(vals.sugar);
+    if (vals.salt !== '' && toNum(vals.salt) !== null) per100g.sodium = Math.round(toNum(vals.salt) * SODIUM_MG_PER_G_SALT);
     const servings = [{ label: `100${unit}`, grams: 100 }];
     const sg = toNum(serving.grams);
     if (sg && sg !== 100) servings.push({ label: serving.label.trim() ? `${serving.label.trim()} (${sg}${unit})` : `1 serving (${sg}${unit})`, grams: sg });
@@ -395,6 +441,26 @@ export function CustomFoodForm({ prefill = {}, onSave, submitLabel = 'Save & Log
               <input className="glass-input tabular" inputMode="decimal" value={vals[k]} onChange={setVal(k)} placeholder="0" />
               <span className="bw-unit">g</span>
             </span>
+          </label>
+        ))}
+      </div>
+
+      <div className="sheet-sub">Fibre, sugar and salt (optional)</div>
+      <div className="form-grid macro-inputs">
+        {[
+          ['fibre', 'Fibre'],
+          ['sugar', 'Sugars'],
+          ['salt', 'Salt'],
+        ].map(([k, label]) => (
+          <label key={k} className="field">
+            <span className="field-label">{label}</span>
+            <span className="unit-input">
+              <input className="glass-input tabular" inputMode="decimal" value={vals[k]} onChange={setVal(k)} placeholder="–" />
+              <span className="bw-unit">g</span>
+            </span>
+            {k === 'salt' && toNum(vals.salt) !== null && vals.salt !== '' && (
+              <span className="field-hint">= {Math.round(toNum(vals.salt) * SODIUM_MG_PER_G_SALT)} mg sodium</span>
+            )}
           </label>
         ))}
       </div>
@@ -450,7 +516,7 @@ export function CustomFoodModal({ open, onClose, prefill, onSave }) {
 /* Portion picker                                                       */
 /* ------------------------------------------------------------------ */
 
-export function PortionPicker({ open, food, entry, meal, onMealChange, onClose, onBack, onSubmit, onDelete }) {
+export function PortionPicker({ open, food, entry, meal, onMealChange, onClose, onBack, onSubmit, onDelete, submitLabel }) {
   const unit = food?.unit || 'g';
   const servings = food?.servings?.length ? food.servings : [{ label: `100${unit}`, grams: 100 }];
   const initial = entry?.grams ?? servings.find((s) => s.grams !== 100)?.grams ?? 100;
@@ -504,7 +570,7 @@ export function PortionPicker({ open, food, entry, meal, onMealChange, onClose, 
             </button>
           ) : null}
           <button type="button" className="btn btn-primary" disabled={!valid} onClick={() => onSubmit(r1(grams))}>
-            {entry ? 'Update' : 'Log Food'}
+            {entry ? 'Update' : submitLabel || 'Log Food'}
           </button>
         </>
       }
@@ -536,6 +602,8 @@ export function PortionPicker({ open, food, entry, meal, onMealChange, onClose, 
           <strong className="tabular m-f">{r1(m.fat)}g</strong>
         </div>
       </div>
+
+      <MicroLine per100g={food.per100g} grams={grams} className="portion-micros" />
 
       <div className="sheet-sub">Serving</div>
       <div className="serving-chips">
@@ -735,6 +803,147 @@ export function SavePresetModal({ open, onClose, defaultName, items, onSave }) {
       <p className="field-hint">
         {items?.length || 0} items · {fmtKcal(t.calories)} kcal · <MacroLine m={t} />
       </p>
+    </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Recipe builder                                                       */
+/* ------------------------------------------------------------------ */
+
+export function RecipeModal({ open, draft, onChange, onAddIngredient, onClose, onSave }) {
+  if (!draft) return null;
+  const items = draft.items;
+  const whole = sumMacros(items);
+  const grams = items.reduce((g, e) => g + e.grams, 0);
+  const servings = Math.max(1, draft.servings || 1);
+  const per = { calories: whole.calories / servings, protein: whole.protein / servings, carbs: whole.carbs / servings, fat: whole.fat / servings };
+  const canSave = draft.name.trim() && items.length > 0;
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={draft.id ? 'Edit Recipe' : 'New Recipe'}
+      size="sheet modal-food"
+      footer={
+        <>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn-primary" disabled={!canSave} onClick={onSave}>
+            Save Recipe
+          </button>
+        </>
+      }
+    >
+      <div className="form-grid">
+        <label className="field full">
+          <span className="field-label">Recipe name</span>
+          <input className="glass-input" value={draft.name} placeholder="e.g. Chicken chilli" onChange={(e) => onChange({ ...draft, name: e.target.value })} />
+        </label>
+        <div className="field">
+          <span className="field-label">Serves</span>
+          <Stepper compact value={servings} step={1} label="Servings" onChange={(v) => onChange({ ...draft, servings: Math.max(1, Math.min(100, v || 1)) })} />
+        </div>
+      </div>
+
+      <div className="sheet-sub">Ingredients (whole batch)</div>
+      {items.length ? (
+        <ul className="entry-list recipe-items">
+          {items.map((e) => {
+            const m = entryMacros(e);
+            return (
+              <li key={e.id} className="entry-row">
+                <span className="entry-main">
+                  <span className="entry-name">{e.name}</span>
+                  <span className="entry-sub">
+                    <span className="entry-qty tabular">
+                      {r1(e.grams)}
+                      {e.unit}
+                    </span>
+                    <MacroLine m={m} />
+                  </span>
+                </span>
+                <span className="entry-kcal tabular">{fmtKcal(m.calories)}</span>
+                <button
+                  type="button"
+                  className="icon-btn entry-del"
+                  onClick={() => onChange({ ...draft, items: items.filter((x) => x.id !== e.id) })}
+                  aria-label={`Remove ${e.name}`}
+                >
+                  <TrashIcon width={17} height={17} />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="food-empty muted">Add everything that goes into the pot, with the amounts for the whole batch.</p>
+      )}
+      <button type="button" className="btn btn-glass btn-subtle recipe-new" onClick={onAddIngredient}>
+        <PlusIcon width={16} height={16} /> Add ingredient
+      </button>
+
+      {items.length > 0 && (
+        <p className="field-hint recipe-total">
+          Whole batch: {fmtKcal(whole.calories)} kcal, {r0(grams)} g. One of {servings} serving{servings === 1 ? '' : 's'} ({r0(grams / servings)} g):{' '}
+          <strong>{fmtKcal(per.calories)} kcal</strong> · <MacroLine m={per} />
+        </p>
+      )}
+    </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Copy a meal or a whole day to another date                           */
+/* ------------------------------------------------------------------ */
+
+export function CopyModal({ open, onClose, fromMeal, count, defaultDate, onCopy }) {
+  const [date, setDate] = useState(defaultDate);
+  const [toMeal, setToMeal] = useState(fromMeal || 'breakfast');
+  useEffect(() => {
+    if (!open) return;
+    setDate(defaultDate);
+    setToMeal(fromMeal || 'breakfast');
+  }, [open, defaultDate, fromMeal]);
+  const label = MEALS.find((m) => m.id === fromMeal)?.label;
+  const valid = /^\d{4}-\d{2}-\d{2}$/.test(date);
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={label ? `Copy ${label}` : 'Copy Day'}
+      size="sm"
+      footer={
+        <>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn-primary" disabled={!valid} onClick={() => onCopy(date, fromMeal ? toMeal : null)}>
+            Copy {count} item{count === 1 ? '' : 's'}
+          </button>
+        </>
+      }
+    >
+      <label className="field">
+        <span className="field-label">Copy to date</span>
+        <input className="glass-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </label>
+      {fromMeal && (
+        <label className="field portion-meal">
+          <span className="field-label">Into meal</span>
+          <span className="glass-select-wrap">
+            <select className="glass-select" value={toMeal} onChange={(e) => setToMeal(e.target.value)}>
+              {MEALS.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.label}
+                </option>
+              ))}
+            </select>
+          </span>
+        </label>
+      )}
+      <p className="field-hint">Anything already logged there is kept.</p>
     </Modal>
   );
 }

@@ -1,6 +1,17 @@
 import { memo } from 'react';
 import { GlassCheckbox, Stepper } from './Controls.jsx';
 import { RankCrest } from './TierCrest.jsx';
+import { fromKg, toKg } from '../lib/lifterProfileStore.js';
+import { fillFromLast } from '../lib/history.js';
+import { relativeLabel } from '../lib/dates.js';
+
+const round2 = (n) => Math.round(n * 100) / 100;
+
+/** Logged weights are stored in kg; these convert to and from what the lifter types. */
+const shown = (kg, unit) => (kg === null || kg === undefined ? null : unit === 'lbs' ? Math.round(fromKg(kg, unit) * 10) / 10 : round2(kg));
+const stored = (value, unit) => (value === null ? null : unit === 'lbs' ? Math.round(toKg(value, unit) * 10000) / 10000 : value);
+
+const RIR_STEPS = [null, 0, 1, 2, 3, 4];
 
 function LiveRankPill({ live }) {
   return (
@@ -16,24 +27,51 @@ function LiveRankPill({ live }) {
   );
 }
 
-function ExerciseCardImpl({ entry, onEdit, live }) {
+/** Reps in reserve: tap to cycle – → 0 → 1 → 2 → 3 → 4 → –. */
+function RirCell({ value, onChange, label }) {
+  const has = Number.isInteger(value);
+  const next = RIR_STEPS[(RIR_STEPS.indexOf(has ? Math.min(value, 4) : null) + 1) % RIR_STEPS.length];
+  return (
+    <button
+      type="button"
+      className={`rir-btn tabular ${has ? 'is-set' : ''}`}
+      onClick={() => onChange(next)}
+      aria-label={`${label}: ${has ? `${value} reps in reserve` : 'not set'}. Tap to change`}
+    >
+      {has ? value : '–'}
+    </button>
+  );
+}
+
+function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
   const { sets } = entry;
 
   const setField = (i, field, value) =>
     onEdit(entry.exerciseId, (e) => {
-      e.sets[i][field] = value;
+      if (field === 'rir' && value === null) delete e.sets[i].rir;
+      else e.sets[i][field] = value;
     });
 
   const addSet = () =>
     onEdit(entry.exerciseId, (e) => {
-      const last = e.sets[e.sets.length - 1];
-      e.sets.push({ weight: last ? last.weight : null, reps: last ? last.reps : null, spotted: false });
+      const prev = e.sets[e.sets.length - 1];
+      e.sets.push({ weight: prev ? prev.weight : null, reps: prev ? prev.reps : null, spotted: false });
     });
 
-  const removeSet = () =>
-    onEdit(entry.exerciseId, (e) => {
-      if (e.sets.length > 1) e.sets.pop();
-    });
+  const removeSet = () => {
+    const victim = sets[sets.length - 1];
+    const hadData = victim && (victim.weight !== null || victim.reps !== null);
+    onEdit(
+      entry.exerciseId,
+      (e) => {
+        if (e.sets.length > 1) e.sets.pop();
+      },
+      hadData ? { undo: `Removed set ${sets.length} of ${entry.name}` } : undefined
+    );
+  };
+
+  const canFill = last && sets.some((s) => s.weight === null && s.reps === null);
+  const fill = () => onEdit(entry.exerciseId, (e) => fillFromLast(e, last));
 
   return (
     <article className="glass-panel exercise-card">
@@ -55,11 +93,32 @@ function ExerciseCardImpl({ entry, onEdit, live }) {
         </div>
       </header>
 
+      {last && (
+        <div className="last-time">
+          <span className="last-time-label">Last time · {relativeLabel(last.date, today)}</span>
+          <span className="last-time-sets tabular">
+            {last.sets.map((s, i) => (
+              <span key={i} className="last-set">
+                {s.weight > 0 ? `${shown(s.weight, unit)} × ${s.reps}` : `${s.reps} reps`}
+              </span>
+            ))}
+          </span>
+          {canFill && (
+            <button type="button" className="mini-btn last-time-fill" onClick={fill}>
+              Use
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="set-table" role="table" aria-label={`${entry.name} sets`}>
         <div className="set-row set-row-head" role="row">
           <span role="columnheader">Set</span>
-          <span role="columnheader">Weight (kg)</span>
+          <span role="columnheader">Weight ({unit})</span>
           <span role="columnheader">Reps</span>
+          <span role="columnheader" title="Reps in reserve: how many more you could have done">
+            RIR
+          </span>
           <span role="columnheader">Spotted</span>
         </div>
         {sets.map((set, i) => (
@@ -69,15 +128,18 @@ function ExerciseCardImpl({ entry, onEdit, live }) {
             </span>
             <div role="cell">
               <Stepper
-                value={set.weight}
+                value={shown(set.weight, unit)}
                 decimal
-                step={1}
+                step={unit === 'lbs' ? 2.5 : 1}
                 label={`Set ${i + 1} weight`}
-                onChange={(v) => setField(i, 'weight', v)}
+                onChange={(v) => setField(i, 'weight', stored(v, unit))}
               />
             </div>
             <div role="cell">
               <Stepper value={set.reps} step={1} label={`Set ${i + 1} reps`} onChange={(v) => setField(i, 'reps', v)} />
+            </div>
+            <div role="cell" className="cell-center">
+              <RirCell value={set.rir} label={`Set ${i + 1} RIR`} onChange={(v) => setField(i, 'rir', v)} />
             </div>
             <div role="cell" className="cell-center">
               <GlassCheckbox

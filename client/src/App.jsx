@@ -41,21 +41,48 @@ export default function App() {
     saveLocal(store.state, store.hasUnsavedChanges);
   }, [store]);
 
-  /** Apply a mutation to a cloned draft of state and mark it dirty. */
-  const update = useCallback((mutate) => {
-    setStore((prev) => {
-      const draft = clone(prev.state);
-      mutate(draft);
-      return { state: draft, hasUnsavedChanges: !IS_LOCAL };
-    });
+  const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+
+  /** `action` = { label, run } adds a button (e.g. Undo) and keeps the toast up longer. */
+  const toast = useCallback((message, type = 'success', action = null) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    const life = action ? 6000 : 2200;
+    setToasts((t) => [...t.slice(-2), { id, message, type, action }]);
+    setTimeout(() => setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x))), life);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), life + 400);
   }, []);
 
-  const toast = useCallback((message, type = 'success') => {
-    const id = `${Date.now()}-${Math.random()}`;
-    setToasts((t) => [...t.slice(-2), { id, message, type }]);
-    setTimeout(() => setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x))), 2200);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
-  }, []);
+  /**
+   * Apply a mutation to a cloned draft of state and mark it dirty.
+   * Pass `{ undo: 'Set removed' }` to show a toast with an Undo button. Undo puts back
+   * the state from just before the change, as long as nothing else has changed since.
+   */
+  const update = useCallback(
+    (mutate, opts) => {
+      const before = storeRef.current.state;
+      const draft = clone(before);
+      mutate(draft);
+      setStore((prev) => {
+        if (prev.state === before) return { state: draft, hasUnsavedChanges: !IS_LOCAL };
+        // Another update landed first: replay on top of it.
+        const fresh = clone(prev.state);
+        mutate(fresh);
+        return { state: fresh, hasUnsavedChanges: !IS_LOCAL };
+      });
+      if (!opts?.undo) return;
+      toast(opts.undo, 'success', {
+        label: 'Undo',
+        run: () => {
+          if (storeRef.current.state !== draft) {
+            toast("Can't undo: something else changed since", 'error');
+            return;
+          }
+          setStore({ state: before, hasUnsavedChanges: !IS_LOCAL });
+        },
+      });
+    },
+    [toast]
+  );
 
   const askConfirm = useCallback(
     (request) =>
@@ -208,7 +235,7 @@ export default function App() {
           )}
 
           <main className="content">
-            {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} />}
+            {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
             {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} toast={toast} />}
             {tab === 'food' && <FoodTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
             {tab === 'rank' && <RankTab state={state} update={update} />}
@@ -234,7 +261,7 @@ export default function App() {
         toast={toast}
       />
       <ConfirmDialog request={confirmRequest} onResolve={resolveConfirm} />
-      <Toasts toasts={toasts} />
+      <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
