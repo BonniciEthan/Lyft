@@ -403,7 +403,7 @@ test('kg / lbs conversion and rounding', () => {
 
 test('Profile normalisation and bodyweight logging', () => {
   const p = normalizeProfile(null);
-  assert.deepEqual(p, { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [] });
+  assert.deepEqual(p, { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [], displayName: 'Lifter', avatarDataUrl: null });
   const bad = normalizeProfile({ sex: 'x', unit: 'stone', bodyweight: -5, bodyweightHistory: [{ date: 'nope', weightKg: 3 }] });
   assert.equal(bad.sex, 'male');
   assert.equal(bad.unit, 'kg');

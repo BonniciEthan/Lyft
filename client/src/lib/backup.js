@@ -3,7 +3,7 @@
  *
  *   {
  *     format: 'lyft-backup', version: 1,
- *     app: { name: 'Lyft', version: '1.2.0', edition: 'local' | 'server' },
+ *     app: { name: 'Lyft', version: '1.3.0', edition: 'local' | 'server' },
  *     exportedAt: ISO string,
  *     state: { split, workouts, logs, goals, profile, nutrition, ... },
  *     barcodeCache: { [barcode]: food }   // scanned Open Food Facts products

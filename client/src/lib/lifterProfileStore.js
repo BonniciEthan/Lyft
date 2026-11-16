@@ -1,5 +1,5 @@
 /**
- * Lifter profile: bodyweight, sex and display unit.
+ * Lifter profile: bodyweight, sex, display unit, display name and avatar photo.
  *
  * The profile lives on the main app state as `state.profile`, so it is persisted to
  * localStorage with everything else and travels with Save / Load to the server.
@@ -17,8 +17,25 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const posNum = (v) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null);
 const round2 = (n) => Math.round(n * 100) / 100;
 
+export const DEFAULT_DISPLAY_NAME = 'Lifter';
+export const DISPLAY_NAME_MAX = 32;
+/** Compressed 256×256 avatars are ~10–25 KB; anything far larger isn't one of ours. */
+export const AVATAR_MAX_CHARS = 400 * 1024;
+const AVATAR_RE = /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/=]+$/;
+
+/** Trimmed, length-capped display name, or null if it's empty. */
+export function cleanDisplayName(v) {
+  if (typeof v !== 'string') return null;
+  const name = v.replace(/\s+/g, ' ').trim().slice(0, DISPLAY_NAME_MAX).trim();
+  return name || null;
+}
+
+export function cleanAvatar(v) {
+  return typeof v === 'string' && v.length <= AVATAR_MAX_CHARS && AVATAR_RE.test(v) ? v : null;
+}
+
 export function createDefaultProfile() {
-  return { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [] };
+  return { bodyweight: null, sex: 'male', unit: 'kg', bodyweightHistory: [], displayName: DEFAULT_DISPLAY_NAME, avatarDataUrl: null };
 }
 
 /** Coerce anything into a valid profile. `bodyweight` is always the latest kg value. */
@@ -27,6 +44,8 @@ export function normalizeProfile(raw) {
   if (!isObj(raw)) return p;
   if (SEXES.includes(raw.sex)) p.sex = raw.sex;
   if (UNITS.includes(raw.unit)) p.unit = raw.unit;
+  p.displayName = cleanDisplayName(raw.displayName) ?? DEFAULT_DISPLAY_NAME;
+  p.avatarDataUrl = cleanAvatar(raw.avatarDataUrl);
 
   const byDate = new Map();
   for (const h of Array.isArray(raw.bodyweightHistory) ? raw.bodyweightHistory : []) {
@@ -123,6 +142,26 @@ export function setUnit(profile, unit) {
   const p = normalizeProfile(profile);
   if (UNITS.includes(unit)) p.unit = unit;
   return p;
+}
+
+/** Rename; an empty or blank name keeps the current one. */
+export function setDisplayName(profile, name) {
+  const p = normalizeProfile(profile);
+  p.displayName = cleanDisplayName(name) ?? p.displayName;
+  return p;
+}
+
+/** Set (a compressed data URL) or clear (null) the profile photo. */
+export function setAvatar(profile, dataUrl) {
+  const p = normalizeProfile(profile);
+  p.avatarDataUrl = dataUrl === null ? null : cleanAvatar(dataUrl) ?? p.avatarDataUrl;
+  return p;
+}
+
+/** "L" from "lifter"; first letter of the first word. */
+export function nameInitial(name) {
+  const ch = [...String(name || DEFAULT_DISPLAY_NAME).trim()][0] || 'L';
+  return ch.toUpperCase();
 }
 
 /** Parse a user-typed weight in `unit` into kg (null if invalid). */

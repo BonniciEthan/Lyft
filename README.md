@@ -97,6 +97,8 @@ cd client && npm run tauri:dev               # desktop window against Vite
     }
   },
   "goals": [{ "id", "exercise", "startPR", "currentPR", "targetPR", "targetDate", "notes", "achieved" }],
+  "profile": { "bodyweight": 80, "sex": "male", "unit": "kg", "bodyweightHistory": [{ "date", "weightKg" }],
+               "displayName": "Lifter", "avatarDataUrl": "data:image/webp;base64,… | null" },
   "nutrition": {
     "days": {
       "2026-11-15": {
@@ -132,13 +134,14 @@ The standalone edition is also hosted at **https://bonniciethan.github.io/Lyft/*
 - **iPhone (Safari):** open the link, tap Share → **Add to Home Screen**, then open Lyft from the icon.
 - **Android (Chrome):** open the link, then tap **Install app** (or ⋮ → Add to Home screen).
 - **Updating:** nothing to do. Each deploy replaces the app at the same link. Open Lyft from the home-screen icon while online and the newest version loads; data is kept (it lives in the browser's storage for the site, which deploys don't touch).
-- **Backup & Restore** (box icon, top right): exports everything (workouts, food diary, custom foods, saved meals, targets, scanned products) to a `.json` file via the share sheet or a download, and restores it on any device. Data is otherwise stored only on the device.
+- **Profile** (your photo or initial, top right): name, photo, overall rank, current streak, totals and a 53-week attendance grid. Scheduled Rest days keep a streak alive; a missed training day ends it.
+- **Backup & Restore** (Profile → Data & Backup): exports everything (workouts, food diary, custom foods, saved meals, targets, scanned products) to a `.json` file via the share sheet or a download, and restores it on any device. Data is otherwise stored only on the device.
 - The live camera scanner works because the site is HTTPS. After the first visit the app opens offline; food lookups still need a connection.
 - To publish changes, commit them and run `bash scripts/deploy-pages.sh`. It tests, builds, and pushes the files to the `gh-pages` branch that Pages serves. The offline service worker is generated at build time by [`client/sw-plugin.js`](client/sw-plugin.js) and is only registered by the local edition on HTTPS.
 
 ## Android app (APK)
 
-`client/android/` is a [Capacitor](https://capacitorjs.com) project that wraps the Lyft Local web build into an installable Android app (`com.personal.lyft.local`). Its version comes from `client/package.json`; for example, 1.2.0 becomes versionCode 10200.
+`client/android/` is a [Capacitor](https://capacitorjs.com) project that wraps the Lyft Local web build into an installable Android app (`com.personal.lyft.local`). Its version comes from `client/package.json`; for example, 1.3.0 becomes versionCode 10300.
 
 ```bash
 cd client && npm run build:apk   # → android/app/build/outputs/apk/release/app-release.apk

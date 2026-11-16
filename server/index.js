@@ -192,6 +192,12 @@ function validateState(s) {
     if (!['male', 'female'].includes(p.sex)) return '"profile.sex" must be "male" or "female"';
     if (!['kg', 'lbs'].includes(p.unit)) return '"profile.unit" must be "kg" or "lbs"';
     if (!Array.isArray(p.bodyweightHistory)) return '"profile.bodyweightHistory" must be an array';
+    if (p.displayName !== undefined && p.displayName !== null && typeof p.displayName !== 'string') return '"profile.displayName" must be a string';
+    if (p.avatarDataUrl !== undefined && p.avatarDataUrl !== null) {
+      if (typeof p.avatarDataUrl !== 'string' || !p.avatarDataUrl.startsWith('data:image/') || p.avatarDataUrl.length > 512 * 1024) {
+        return '"profile.avatarDataUrl" must be an image data URL under 512 KB or null';
+      }
+    }
     for (const h of p.bodyweightHistory) {
       if (!isPlainObject(h) || !/^\d{4}-\d{2}-\d{2}$/.test(h.date) || !(typeof h.weightKg === 'number' && h.weightKg > 0)) {
         return 'Invalid bodyweight history entry';

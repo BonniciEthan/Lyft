@@ -13,7 +13,8 @@ import { RankTab } from './components/RankTab.jsx';
 import { FoodTab } from './components/FoodTab.jsx';
 import { IS_LOCAL } from './edition.js';
 import { BackupModal } from './components/BackupModal.jsx';
-import { BackupIcon } from './components/Icons.jsx';
+import { ProfileButton } from './components/Avatar.jsx';
+import { ProfilePage } from './components/ProfilePage.jsx';
 import { mergeCache } from './lib/openFoodFactsService.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
@@ -25,6 +26,8 @@ export default function App() {
   storeRef.current = store;
 
   const [tab, setTab] = useState('progress');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const tabScroll = useRef(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -123,6 +126,40 @@ export default function App() {
     doLoad();
   };
 
+  // The Profile page sits on top of the tabs. It pushes a history entry so the browser /
+  // Android back button closes it too, and the tab underneath keeps its scroll position.
+  const openProfile = () => {
+    if (profileOpen) return;
+    tabScroll.current = window.scrollY;
+    try {
+      window.history.pushState({ lyftProfile: true }, '');
+    } catch {
+      /* history unavailable: the Back button still works */
+    }
+    setProfileOpen(true);
+  };
+
+  const closeProfile = useCallback(() => {
+    setProfileOpen(false);
+    requestAnimationFrame(() => window.scrollTo(0, tabScroll.current));
+  }, []);
+
+  const leaveProfile = (nextTab) => {
+    if (nextTab) {
+      setTab(nextTab);
+      tabScroll.current = 0;
+    }
+    if (window.history.state?.lyftProfile) window.history.back();
+    else closeProfile();
+  };
+
+  useEffect(() => {
+    if (!profileOpen) return undefined;
+    const onPop = () => closeProfile();
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [profileOpen, closeProfile]);
+
   const handleImport = ({ state: imported, barcodeCache }) => {
     setStore({ state: imported, hasUnsavedChanges: !IS_LOCAL });
     mergeCache(barcodeCache);
@@ -137,36 +174,49 @@ export default function App() {
         <span className="orb orb-slate" />
       </div>
 
-      {IS_LOCAL ? (
-        <header className="topbar topbar-local">
-          <div className="topbar-inner">
-            <span className="topbar-spacer" aria-hidden />
-            <span className="app-title">Lyft</span>
-            <button type="button" className="icon-btn glass-btn backup-open" onClick={() => setBackupOpen(true)} aria-label="Backup and restore">
-              <BackupIcon width={20} height={20} />
-            </button>
-          </div>
-        </header>
+      {profileOpen ? (
+        <ProfilePage
+          state={state}
+          update={update}
+          toast={toast}
+          onBack={() => leaveProfile()}
+          onGoToRank={() => leaveProfile('rank')}
+          onOpenBackup={() => setBackupOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
       ) : (
-      <TopBar
-        lastSynced={state.lastSynced}
-        hasUnsavedChanges={hasUnsavedChanges}
-        saving={saving}
-        loading={loading}
-        onSave={handleSave}
-        onLoad={handleLoad}
-        onOpenSettings={() => setSettingsOpen(true)}
-      />
+        <>
+          {IS_LOCAL ? (
+            <header className="topbar topbar-local">
+              <div className="topbar-inner">
+                <span className="topbar-spacer" aria-hidden />
+                <span className="app-title">Lyft</span>
+                <ProfileButton profile={state.profile} onClick={openProfile} />
+              </div>
+            </header>
+          ) : (
+            <TopBar
+              lastSynced={state.lastSynced}
+              hasUnsavedChanges={hasUnsavedChanges}
+              saving={saving}
+              loading={loading}
+              onSave={handleSave}
+              onLoad={handleLoad}
+              profile={state.profile}
+              onOpenProfile={openProfile}
+            />
+          )}
+
+          <main className="content">
+            {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} />}
+            {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} toast={toast} />}
+            {tab === 'food' && <FoodTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
+            {tab === 'rank' && <RankTab state={state} update={update} />}
+          </main>
+
+          <NavDock active={tab} onChange={setTab} />
+        </>
       )}
-
-      <main className="content">
-        {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} />}
-        {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} toast={toast} />}
-        {tab === 'food' && <FoodTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
-        {tab === 'rank' && <RankTab state={state} update={update} />}
-      </main>
-
-      <NavDock active={tab} onChange={setTab} />
 
       {!IS_LOCAL && (
         <SettingsModal

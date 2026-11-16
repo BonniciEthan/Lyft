@@ -1,7 +1,7 @@
 import { formatTime } from '../lib/dates.js';
-import { GearIcon } from './Icons.jsx';
+import { ProfileButton } from './Avatar.jsx';
 
-export function TopBar({ lastSynced, hasUnsavedChanges, saving, loading, onSave, onLoad, onOpenSettings }) {
+export function TopBar({ lastSynced, hasUnsavedChanges, saving, loading, onSave, onLoad, profile, onOpenProfile }) {
   const busy = saving || loading;
   return (
     <header className="topbar">
@@ -30,9 +30,7 @@ export function TopBar({ lastSynced, hasUnsavedChanges, saving, loading, onSave,
             {saving ? <span className="spinner" aria-hidden /> : 'Save'}
           </button>
         </div>
-        <button type="button" className="icon-btn glass-panel gear-btn" onClick={onOpenSettings} aria-label="Settings">
-          <GearIcon />
-        </button>
+        <ProfileButton profile={profile} onClick={onOpenProfile} />
       </div>
     </header>
   );
