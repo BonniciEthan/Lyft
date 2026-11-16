@@ -1,0 +1,19 @@
+name = "lyft-push"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+
+# 19:00 and 20:00 UTC. The worker only sends on the one that is 21:00 in Malta
+# (19:00 UTC during summer time, 20:00 UTC in winter).
+[triggers]
+crons = ["0 19,20 * * *"]
+
+[vars]
+ALLOWED_ORIGINS = "https://bonniciethan.github.io,http://localhost:5173,http://localhost:4173"
+VAPID_SUBJECT = "https://bonniciethan.github.io/Lyft/"
+# Public half of the VAPID key pair (also in client/.env.friends as VITE_PUSH_PUBLIC_KEY).
+VAPID_PUBLIC_KEY = "BLuwWDqS_inF6eMN-4PDPqpau9t0UOUOuNFMSkNY2IaQ2c3J03FiMTllxKZxh81_jkCOe55ey1jCjALb0JiDIX4"
+# VAPID_PRIVATE_KEY is a secret: `npx wrangler secret put VAPID_PRIVATE_KEY`
+
+[[kv_namespaces]]
+binding = "SUBS"
+id = "REPLACE_WITH_KV_ID"

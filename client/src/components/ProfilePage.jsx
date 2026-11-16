@@ -8,6 +8,7 @@ import { IS_LOCAL } from '../edition.js';
 import { Avatar } from './Avatar.jsx';
 import { AttendanceGrid } from './AttendanceGrid.jsx';
 import { RankCrest } from './TierCrest.jsx';
+import { ReminderCard } from './ReminderControls.jsx';
 import { BackupIcon, CameraIcon, CheckIcon, ChevronLeft, CloseIcon, EditIcon, FlameIcon, GearIcon } from './Icons.jsx';
 
 function NameEditor({ name, onSave }) {
@@ -104,7 +105,7 @@ function Stat({ label, value, unit, icon }) {
   );
 }
 
-export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBackup, onOpenSettings }) {
+export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBackup, onOpenSettings, onShowInstall }) {
   const profile = useMemo(() => normalizeProfile(state.profile), [state.profile]);
   const today = todayKey();
   const streak = useMemo(() => calculateCurrentStreak(state.logs, state.split, today), [state.logs, state.split, today]);
@@ -196,6 +197,8 @@ export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBa
           </div>
           <AttendanceGrid logs={state.logs} split={state.split} today={today} />
         </section>
+
+        <ReminderCard toast={toast} onShowInstall={onShowInstall} />
 
         <section className="glass-panel card pf-data">
           <div className="card-head">

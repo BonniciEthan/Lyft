@@ -16,6 +16,9 @@ import { BackupModal } from './components/BackupModal.jsx';
 import { ProfileButton } from './components/Avatar.jsx';
 import { ProfilePage } from './components/ProfilePage.jsx';
 import { mergeCache } from './lib/openFoodFactsService.js';
+import { InstallSheet, shouldShowInstallHint } from './components/InstallSheet.jsx';
+import { ReminderPrompt, shouldAskReminder } from './components/ReminderControls.jsx';
+import { resumeReminder } from './lib/reminders.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
 
@@ -35,6 +38,18 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [confirmRequest, setConfirmRequest] = useState(null);
   const confirmResolver = useRef(null);
+  const [installOpen, setInstallOpen] = useState(shouldShowInstallHint);
+  const [reminderAskOpen, setReminderAskOpen] = useState(false);
+
+  // Daily 9pm reminder: keep an enabled one scheduled, and ask once where it can work
+  // (never on top of the "add to Home Screen" sheet).
+  useEffect(() => {
+    resumeReminder();
+    if (installOpen || !shouldAskReminder()) return undefined;
+    const t = setTimeout(() => setReminderAskOpen(true), 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Local-first persistence: every state change lands in localStorage immediately.
   useEffect(() => {
@@ -210,6 +225,7 @@ export default function App() {
           onGoToRank={() => leaveProfile('rank')}
           onOpenBackup={() => setBackupOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onShowInstall={() => setInstallOpen(true)}
         />
       ) : (
         <>
@@ -260,6 +276,8 @@ export default function App() {
         askConfirm={askConfirm}
         toast={toast}
       />
+      <InstallSheet open={installOpen} onClose={() => setInstallOpen(false)} />
+      <ReminderPrompt open={reminderAskOpen} onClose={() => setReminderAskOpen(false)} toast={toast} />
       <ConfirmDialog request={confirmRequest} onResolve={resolveConfirm} />
       <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>

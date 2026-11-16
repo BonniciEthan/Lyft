@@ -11,6 +11,8 @@
  * - Same-origin files: cache first. Hashed file names never change, so this is always safe.
  * - Google Fonts: cache first after the first load (stale fonts are harmless).
  * - Everything else (Open Food Facts, the sync API): not intercepted.
+ *
+ * It also shows the 9pm daily reminder when the push server pings it (see lib/reminders.js).
  */
 import { createHash } from 'node:crypto';
 import { readdirSync, statSync } from 'node:fs';
@@ -43,6 +45,40 @@ self.addEventListener('activate', (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lyft-') && k !== CACHE && k !== FONT_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+// Daily 21:00 reminder (Malta time). The push server sends an empty ping; the text lives
+// here, so no data travels with it. Each push must show a notification (iOS requires it).
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Lyft', {
+      body: data.body || "Time to log today. Add your workout and food before bed.",
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      tag: 'lyft-daily-reminder',
+      renotify: true,
+      data: { url: './' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || './', self.registration.scope).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (w.url.startsWith(self.registration.scope) && 'focus' in w) return w.focus();
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });
 

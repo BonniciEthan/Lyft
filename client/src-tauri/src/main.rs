@@ -12,6 +12,8 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // Daily 9pm "log today" reminder (see client/src/lib/reminders.js).
+        .plugin(tauri_plugin_notification::init())
         .run(tauri::generate_context!())
         .expect("error while running Lyft");
 }

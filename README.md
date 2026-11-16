@@ -172,3 +172,23 @@ cd client && npm run build:apk   # → android/app/build/outputs/apk/release/app
 ```
 
 Requirements: JDK 21 (`JAVA_HOME`) and the Android SDK (`ANDROID_HOME`, platform 36 + build-tools). Release signing reads `~/.config/lyft-android/keystore.properties` (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`). The keystore is **not** in the repo. Keep a backup of it, because every future APK must be signed with the same key to install as an update over the previous one.
+
+## Daily reminder (9pm Malta time)
+
+Profile → **Daily reminder** turns on a notification every evening at 21:00 Europe/Malta
+asking the user to log the day. How it's delivered depends on the version:
+
+| Version | How | Works when closed? |
+| --- | --- | --- |
+| Android app (APK) | Local notification scheduled on the phone | Yes |
+| Desktop app (`.deb`) | System notification | Only while Lyft is open or minimised |
+| Web on Android / desktop browsers | Web Push via [`push-worker/`](push-worker/README.md) | Yes |
+| Web on iPhone / iPad | Web Push, **only after Add to Home Screen** (iOS 16.4+) | Yes |
+
+The first time someone opens the web app on a phone in a browser tab, a sheet shows how to
+add Lyft to the Home Screen (Share → Add to Home Screen on iPhone, menu → Install app on
+Android). It doesn't appear when Lyft is opened from the Home Screen. Once the app runs
+somewhere reminders work, it asks once whether to turn them on.
+
+Web reminders need the push server deployed once. See [push-worker/README.md](push-worker/README.md).
+Until `VITE_PUSH_URL` is set in `client/.env.friends`, the web app says reminders aren't set up.
