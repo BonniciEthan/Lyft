@@ -1,5 +1,29 @@
 # Lyft
 
+A gym tracker that turns every set you log into a strength rank, from Wood to Olympian, with a food diary and a streak to keep you coming back. No accounts, no subscriptions: your data stays on your own devices.
+
+**Try it on your phone:** https://bonniciethan.github.io/Lyft/ · **Downloads (Android, Linux):** [latest release](https://github.com/BonniciEthan/Lyft/releases/latest)
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-progress.png" width="240" alt="Workout logger with a live rank-up label"><br><sub>Log sets, see rank-ups live</sub></td>
+    <td align="center"><img src="docs/screenshots/09-rank-up.png" width="240" alt="Rank Up! pop-up after a workout"><br><sub>Rank up after a workout</sub></td>
+    <td align="center"><img src="docs/screenshots/04-rank-bodygraph.png" width="240" alt="Bodygraph coloured by tier"><br><sub>Every muscle has a tier</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/05-rank-muscle.png" width="240" alt="Chest detail with the next rank target"><br><sub>Know exactly what's next</sub></td>
+    <td align="center"><img src="docs/screenshots/06-rank-overview.png" width="240" alt="Overall rank and muscle tiers"><br><sub>Overall rank, Wood to Olympian</sub></td>
+    <td align="center"><img src="docs/screenshots/07-rank-chart.png" width="240" alt="Strength rating chart and rank calculator"><br><sub>Track strength over time</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/08-profile.png" width="240" alt="Profile with streak and attendance grid"><br><sub>Streaks and a year of attendance</sub></td>
+    <td align="center"><img src="docs/screenshots/03-food.png" width="240" alt="Food diary with calorie and macro targets"><br><sub>Calories, macros and barcode scanning</sub></td>
+    <td align="center"><img src="docs/screenshots/02-split.png" width="240" alt="Weekly split and routines"><br><sub>Plan your weekly split</sub></td>
+  </tr>
+</table>
+
+## Self-hosting
+
 A self-hosted personal gym tracker. One React + Vite front end, served three ways:
 
 | Target | How |
