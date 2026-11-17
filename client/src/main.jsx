@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
 import { registerOfflineSupport } from './lib/pwa.js';
+import { applyTheme } from './lib/theme.js';
+
+applyTheme();
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

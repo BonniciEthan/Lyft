@@ -23,45 +23,143 @@
     U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Graphite & Moss. Dark is the default; :root[data-theme='light'] (lib/theme.js) swaps to
+   alabaster. 90% neutral surfaces, 9% hairlines and muted inks, 1% moss accent. */
 :root {
-  --bg: #080a0f;
-  --indigo: #1e1b4b;
-  --ocean: #0c2d48;
-  --slate: #1e293b;
+  /* Raw channels (space-separated, used as rgb(var(--x) / a)). */
+  --ink-rgb: 255 255 255; /* light-on-dark overlays; flips to near-black in light */
+  --shade-rgb: 0 0 0;
+  --bg-rgb: 11 13 12;
+  --panel-rgb: 18 21 20;
+  --scrim-rgb: 4 5 5;
+  --accent-rgb: 169 199 154;
+  --positive-rgb: 143 191 154;
+  --warning-rgb: 217 179 106;
+  --danger-rgb: 224 120 107;
+  --macro-c-rgb: 143 167 184;
 
-  --text: #f8fafc;
-  --text-2: #94a3b8;
-  /* ≥4.5:1 (WCAG AA) on --bg and on the lightest glass panels. */
-  --text-3: #8b9ab0;
+  /* Surfaces */
+  --bg: #0b0d0c;
+  --surface-1: #121514;
+  --surface-2: #181c1a;
+  --surface-3: #1f2421;
+  --hairline: rgb(var(--ink-rgb) / 0.07);
+  --hairline-strong: rgb(var(--ink-rgb) / 0.12);
 
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-elev: rgba(255, 255, 255, 0.1);
-  --glass-hover: rgba(255, 255, 255, 0.14);
-  --rim: rgba(255, 255, 255, 0.15);
-  --rim-soft: rgba(255, 255, 255, 0.09);
-  --specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.24);
-  --drop: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
-  --blur: blur(28px) saturate(180%);
+  /* Ink */
+  --text: #edefec;
+  --text-2: #a3a9a4;
+  /* ≥4.5:1 (WCAG AA) on --bg and --surface-2. */
+  --text-3: #868d88;
 
-  --accent: #a5b4fc;
-  --accent-strong: #818cf8;
-  --amber: #fbbf24;
-  --emerald: #34d399;
-  --danger: #f87171;
+  /* Accent (1%) and semantic tones */
+  --accent: #a9c79a;
+  --accent-strong: #bcd6ae;
+  --on-accent: #0b0d0c;
+  --accent-wash: rgb(var(--accent-rgb) / 0.12);
+  --positive: #8fbf9a;
+  --warning: #d9b36a;
+  --danger: #e0786b;
+  --macro-p: #c9cfca;
+  --macro-c: #8fa7b8;
+  --macro-f: #c7a87a;
 
-  --r-card: 24px;
-  --r-row: 16px;
+  /* Glass: floating surfaces only (dock, top bar, sheets, HUDs). */
+  --glass-bg: rgb(var(--panel-rgb) / 0.62);
+  --glass-edge: rgb(var(--ink-rgb) / 0.12);
+  --glass-spec: inset 0 1px 0 0 rgb(var(--ink-rgb) / 0.1);
+  --glass-blur: blur(24px) saturate(140%);
+  --glass-drop: 0 18px 40px -16px rgb(var(--shade-rgb) / 0.7);
+
+  /* Legacy names kept so older rules resolve to the new system. */
+  --glass: var(--surface-1);
+  --glass-elev: var(--surface-2);
+  --glass-hover: var(--surface-3);
+  --rim: var(--hairline-strong);
+  --rim-soft: var(--hairline);
+  --specular: 0 0 0 0 transparent;
+  --drop: var(--glass-drop);
+  --blur: var(--glass-blur);
+  --amber: var(--warning);
+  --emerald: var(--positive);
+
+  /* Spacing (4px grid) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-card: var(--r-lg);
+  --r-row: var(--r-md);
   --r-pill: 9999px;
 
   --tap: 44px;
-  --gutter: 14px;
+  --gutter: 16px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Motion: fast, crisp ease-out; spring only for small pops. */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: var(--ease);
+  --spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --t-press: 120ms;
+  --t-state: 200ms;
+  --t-sheet: 280ms;
+
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
 
   color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --ink-rgb: 18 20 19;
+  --shade-rgb: 40 38 30;
+  --bg-rgb: 244 243 239;
+  --panel-rgb: 255 255 255;
+  --scrim-rgb: 30 30 26;
+  --accent-rgb: 79 122 67;
+  --positive-rgb: 61 125 82;
+  --warning-rgb: 158 112 30;
+  --danger-rgb: 181 64 52;
+  --macro-c-rgb: 74 105 128;
+
+  --bg: #f4f3ef;
+  --surface-1: #ffffff;
+  --surface-2: #ecebe6;
+  --surface-3: #e2e1db;
+  --hairline: rgb(var(--ink-rgb) / 0.08);
+  --hairline-strong: rgb(var(--ink-rgb) / 0.14);
+
+  --text: #121413;
+  --text-2: #4d534f;
+  --text-3: #636966;
+
+  --accent: #4f7a43;
+  --accent-strong: #3f6535;
+  --on-accent: #ffffff;
+  --accent-wash: rgb(var(--accent-rgb) / 0.1);
+  --positive: #3d7d52;
+  --warning: #9e701e;
+  --danger: #b54034;
+  --macro-p: #3b403d;
+  --macro-c: #4a6980;
+  --macro-f: #946b32;
+
+  --glass-bg: rgb(255 255 255 / 0.7);
+  --glass-edge: rgb(var(--ink-rgb) / 0.08);
+  --glass-spec: inset 0 1px 0 0 rgb(255 255 255 / 0.9);
+  --glass-drop: 0 16px 36px -18px rgb(var(--shade-rgb) / 0.28);
+
+  color-scheme: light;
 }
 
 *,
@@ -140,7 +238,8 @@ ul {
 .set-count-value,
 input[type='date'] {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  letter-spacing: -0.005em;
 }
 
 .muted {
@@ -157,58 +256,61 @@ input[type='date'] {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(30, 27, 75, 0.55) 0%, transparent 60%),
-    radial-gradient(90% 70% at 100% 100%, rgba(12, 45, 72, 0.6) 0%, transparent 65%),
-    var(--bg);
+  /* One still, low-alpha moss wash at the top: gives the glass something to refract. */
+  background: radial-gradient(110% 55% at 50% -12%, rgb(var(--accent-rgb) / 0.07) 0%, transparent 62%), var(--bg);
+}
+
+:root[data-theme='light'] .ambient {
+  background: var(--bg);
 }
 
 .orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.85;
-}
-
-.orb-indigo {
-  width: 70vmax;
-  height: 70vmax;
-  top: -25vmax;
-  left: -20vmax;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.45) 0%, rgba(30, 27, 75, 0.6) 40%, transparent 70%);
-}
-
-.orb-ocean {
-  width: 65vmax;
-  height: 65vmax;
-  bottom: -25vmax;
-  right: -20vmax;
-  background: radial-gradient(circle, rgba(14, 116, 144, 0.38) 0%, rgba(12, 45, 72, 0.65) 40%, transparent 70%);
-}
-
-.orb-slate {
-  width: 45vmax;
-  height: 45vmax;
-  top: 35%;
-  left: 30%;
-  background: radial-gradient(circle, rgba(51, 65, 85, 0.45) 0%, transparent 70%);
+  display: none;
 }
 
 /* ---------------------------------------------------------------------
-   Glass material
+   Materials
+   Two levels only. .surface: flat content (cards, lists, rows). .glass: floating
+   chrome (dock, top bar, sheets, toasts, HUDs). .glass-panel is the legacy name and
+   resolves to the flat surface; floating elements opt into glass explicitly.
    --------------------------------------------------------------------- */
 
+.surface,
 .glass-panel {
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
-  border: 1px solid var(--rim);
-  box-shadow: var(--specular), var(--drop);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  box-shadow: none;
+}
+
+.glass,
+.nav-dock.glass-panel,
+.modal.glass-panel,
+.toast.glass-panel,
+.calendar-bar.glass-panel,
+.food-summary.glass-panel,
+.sync-pill.glass-panel,
+.chart-tip.glass-panel,
+.calc-list.glass-panel,
+.today-pill.glass-panel {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-spec), var(--glass-drop);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-panel {
-    background: rgba(22, 26, 38, 0.92);
+  .glass,
+  .nav-dock.glass-panel,
+  .modal.glass-panel,
+  .toast.glass-panel,
+  .calendar-bar.glass-panel,
+  .food-summary.glass-panel,
+  .sync-pill.glass-panel,
+  .chart-tip.glass-panel,
+  .calc-list.glass-panel,
+  .today-pill.glass-panel {
+    background: rgb(var(--panel-rgb) / 0.96);
   }
 }
 
@@ -239,8 +341,11 @@ input[type='date'] {
   position: sticky;
   top: 0;
   z-index: 20;
-  padding: calc(10px + var(--safe-top)) var(--gutter) 8px;
-  background: linear-gradient(to bottom, rgba(8, 10, 15, 0.85) 0%, rgba(8, 10, 15, 0.55) 60%, transparent 100%);
+  padding: calc(8px + var(--safe-top)) var(--gutter) 8px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .topbar-local .topbar-inner {
@@ -261,7 +366,7 @@ input[type='date'] {
 .app-title {
   font-size: 17px;
   font-weight: 650;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .topbar-inner {
@@ -301,7 +406,7 @@ input[type='date'] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 64px;
   height: var(--tap);
   padding: 0 16px;
@@ -309,20 +414,20 @@ input[type='date'] {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  background: var(--glass-elev);
-  border: 1px solid var(--rim-soft);
-  box-shadow: var(--specular);
-  transition: background 0.2s, transform 0.15s var(--ease);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  transition: background var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .pill-btn:not(:disabled):active {
-  transform: scale(0.95);
-  background: var(--glass-hover);
+  transform: scale(0.97);
+  background: var(--surface-3);
 }
 
 .pill-btn-primary {
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.42), rgba(99, 102, 241, 0.28));
-  border-color: rgba(165, 180, 252, 0.35);
+  color: var(--on-accent);
+  background: var(--accent);
+  border-color: transparent;
 }
 
 .pill-btn-primary.is-dirty {
@@ -330,23 +435,21 @@ input[type='date'] {
 }
 
 .dirty-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
-  animation: pulse-amber 1.6s ease-out infinite;
+  background: var(--warning);
 }
 
 @keyframes pulse-amber {
   0% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.65);
+    box-shadow: 0 0 0 0 rgb(var(--warning-rgb) / 0.65);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+    box-shadow: 0 0 0 8px rgb(var(--warning-rgb) / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    box-shadow: 0 0 0 0 rgb(var(--warning-rgb) / 0);
   }
 }
 
@@ -354,8 +457,8 @@ input[type='date'] {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: var(--text);
+  border: 2px solid rgb(var(--ink-rgb) / 0.2);
+  border-top-color: currentColor;
   animation: spin 0.7s linear infinite;
   flex: none;
 }
@@ -375,11 +478,11 @@ input[type='date'] {
   min-width: var(--tap);
   border-radius: var(--r-pill);
   color: var(--text);
-  transition: background 0.2s, transform 0.15s var(--ease);
+  transition: background var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .icon-btn:not(:disabled):active {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
 .gear-btn {
@@ -393,9 +496,8 @@ input[type='date'] {
 }
 
 .glass-btn {
-  background: var(--glass-elev);
-  border: 1px solid var(--rim-soft);
-  box-shadow: var(--specular);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
 }
 
 .glass-btn.danger {
@@ -416,32 +518,32 @@ input[type='date'] {
   border-radius: var(--r-pill);
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.005em;
   white-space: nowrap;
-  transition: background 0.2s, transform 0.15s var(--ease), opacity 0.2s;
+  transition: background var(--t-state) var(--ease), transform var(--t-press) var(--ease), opacity var(--t-state);
 }
 
 .btn:not(:disabled):active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .btn-primary {
-  color: #fff;
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.55), rgba(99, 102, 241, 0.38));
-  border: 1px solid rgba(165, 180, 252, 0.4);
-  box-shadow: var(--specular), 0 8px 24px -8px rgba(99, 102, 241, 0.6);
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 1px solid transparent;
+  box-shadow: none;
 }
 
 .btn-danger {
-  color: #fff;
-  background: linear-gradient(180deg, rgba(248, 113, 113, 0.5), rgba(220, 38, 38, 0.35));
-  border: 1px solid rgba(252, 165, 165, 0.4);
-  box-shadow: var(--specular);
+  color: var(--danger);
+  background: rgb(var(--danger-rgb) / 0.1);
+  border: 1px solid rgb(var(--danger-rgb) / 0.28);
 }
 
 .btn-glass {
-  background: var(--glass-elev);
-  border: 1px solid var(--rim);
-  box-shadow: var(--specular);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
 }
 
 .btn-ghost {
@@ -481,10 +583,9 @@ input[type='date'] {
   bottom: calc(12px + var(--safe-bottom));
   transform: translateX(-50%);
   width: calc(100% - 2 * var(--gutter));
-  max-width: 460px;
-  padding: 6px;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.07);
+  max-width: 440px;
+  padding: 4px;
+  border-radius: var(--r-xl);
 }
 
 .nav-track {
@@ -499,12 +600,10 @@ input[type='date'] {
   bottom: 0;
   left: 0;
   width: calc(100% / var(--nav-count, 4));
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: var(--specular), 0 6px 18px -6px rgba(0, 0, 0, 0.5);
+  border-radius: 24px;
+  background: rgb(var(--ink-rgb) / 0.07);
   transform: translateX(calc(var(--nav-index) * 100%));
-  transition: transform 0.45s var(--ease);
+  transition: transform 320ms var(--ease);
 }
 
 .nav-tab {
@@ -514,18 +613,18 @@ input[type='date'] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   min-height: 52px;
-  border-radius: var(--r-pill);
+  border-radius: 24px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--text-2);
-  transition: color 0.25s;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-3);
+  transition: color var(--t-state) var(--ease);
 }
 
 .nav-tab.is-active {
-  color: var(--text);
+  color: var(--accent);
 }
 
 /* ---------------------------------------------------------------------
@@ -540,10 +639,8 @@ input[type='date'] {
   align-items: center;
   justify-content: center;
   padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
-  background: rgba(3, 5, 10, 0.55);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: fade-in 0.2s ease;
+  background: rgb(var(--scrim-rgb) / 0.5);
+  animation: fade-in var(--t-state) var(--ease);
 }
 
 .modal {
@@ -552,9 +649,8 @@ input[type='date'] {
   max-height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 28px;
-  background: rgba(30, 34, 48, 0.55);
-  animation: modal-in 0.35s var(--ease);
+  border-radius: var(--r-xl);
+  animation: modal-in var(--t-sheet) var(--ease);
   overflow: hidden;
 }
 
@@ -566,12 +662,13 @@ input[type='date'] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 10px 4px 22px;
+  padding: 16px 8px 4px 24px;
 }
 
 .modal-head h2 {
-  font-size: 18px;
-  font-weight: 650;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .modal-head .icon-btn {
@@ -579,7 +676,7 @@ input[type='date'] {
 }
 
 .modal-body {
-  padding: 8px 22px 16px;
+  padding: 8px 24px 16px;
   overflow-y: auto;
 }
 
@@ -593,8 +690,8 @@ input[type='date'] {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 10px 16px 16px;
-  border-top: 1px solid var(--rim-soft);
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--hairline);
 }
 
 @keyframes fade-in {
@@ -622,10 +719,10 @@ input[type='date'] {
 
 .field-label {
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-2);
+  color: var(--text-3);
 }
 
 .field-hint {
@@ -642,13 +739,12 @@ input[type='date'] {
   width: 100%;
   min-height: var(--tap);
   padding: 10px 16px;
-  border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid var(--rim-soft);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   outline: none;
   font-size: 16px;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color var(--t-state) var(--ease), background var(--t-state) var(--ease);
 }
 
 .glass-input::placeholder {
@@ -656,8 +752,8 @@ input[type='date'] {
 }
 
 .glass-input:focus {
-  border-color: rgba(165, 180, 252, 0.55);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  background: var(--surface-2);
 }
 
 input[type='date'].glass-input {
@@ -667,7 +763,7 @@ input[type='date'].glass-input {
 }
 
 input[type='date']::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
+  filter: invert(0.7);
   cursor: pointer;
 }
 
@@ -714,13 +810,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .status-dot.ok {
-  background: var(--emerald);
-  box-shadow: 0 0 10px var(--emerald);
+  background: var(--positive);
 }
 
 .status-dot.err {
   background: var(--danger);
-  box-shadow: 0 0 10px var(--danger);
 }
 
 /* ---------------------------------------------------------------------
@@ -745,13 +839,12 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .toast {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 18px 10px 12px;
+  gap: 12px;
+  padding: 10px 16px 10px 12px;
   border-radius: var(--r-pill);
   font-size: 14px;
   font-weight: 500;
-  background: rgba(30, 34, 48, 0.6);
-  animation: toast-in 0.4s var(--ease);
+  animation: toast-in var(--t-sheet) var(--ease);
 }
 
 .toast.leaving {
@@ -771,13 +864,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .toast-success .toast-icon {
-  color: var(--emerald);
-  background: rgba(52, 211, 153, 0.16);
+  color: var(--positive);
+  background: rgb(var(--positive-rgb) / 0.14);
 }
 
 .toast-error .toast-icon {
   color: var(--danger);
-  background: rgba(248, 113, 113, 0.16);
+  background: rgb(var(--danger-rgb) / 0.14);
 }
 
 @keyframes toast-in {
@@ -808,18 +901,18 @@ input[type='date']::-webkit-calendar-picker-indicator {
   min-width: var(--tap);
   border-radius: var(--r-pill);
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1;
-  color: var(--text);
-  background: var(--glass-elev);
-  border: 1px solid var(--rim-soft);
-  box-shadow: var(--specular);
-  transition: background 0.15s, transform 0.12s var(--ease);
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  transition: background var(--t-press) var(--ease), color var(--t-press), transform var(--t-press) var(--ease);
 }
 
 .step-btn:not(:disabled):active {
-  transform: scale(0.88);
-  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.92);
+  color: var(--text);
+  background: var(--surface-3);
 }
 
 @media (hover: hover) {
@@ -832,17 +925,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .num-display,
 .num-input {
-  flex: 1 1 0;
-  min-width: 30px;
-  height: var(--tap);
-  padding: 0 2px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--accent);
+  background: var(--surface-2);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-wash);
 }
 
 .num-display.is-empty {
@@ -850,15 +937,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .num-display:active {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-2);
 }
 
 .num-input {
   width: 100%;
-  border: 1px solid rgba(165, 180, 252, 0.6);
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(var(--accent-rgb) / 0.6);
+  background: rgb(var(--ink-rgb) / 0.1);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.18);
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
 }
 
 .num-lg {
@@ -878,14 +965,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: var(--glass-elev);
-  border: 1px solid var(--rim);
-  box-shadow: var(--specular);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: 1.5px solid var(--hairline-strong);
   color: transparent;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.18s var(--ease);
+  transition: background var(--t-state) var(--ease), border-color var(--t-state), color var(--t-state), transform 240ms var(--spring);
 }
 
 .glass-check:active .glass-check-box {
@@ -893,16 +979,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .glass-check.is-checked .glass-check-box {
-  color: #fff;
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.75), rgba(99, 102, 241, 0.55));
-  border-color: rgba(199, 210, 254, 0.6);
-  box-shadow: var(--specular), 0 0 14px -2px rgba(129, 140, 248, 0.7);
+  color: var(--on-accent);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .glass-check.tone-emerald.is-checked .glass-check-box {
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.75), rgba(16, 185, 129, 0.55));
-  border-color: rgba(167, 243, 208, 0.6);
-  box-shadow: var(--specular), 0 0 14px -2px rgba(52, 211, 153, 0.7);
+  color: var(--on-accent);
+  background: var(--positive);
+  border-color: var(--positive);
 }
 
 .segmented {
@@ -911,8 +996,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   grid-template-columns: repeat(var(--seg-count), 1fr);
   padding: 3px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--rim-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
 }
 
 .segmented-pill {
@@ -922,24 +1007,24 @@ input[type='date']::-webkit-calendar-picker-indicator {
   left: 3px;
   width: calc((100% - 6px) / var(--seg-count));
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: var(--specular);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 1px 2px rgb(var(--shade-rgb) / 0.18);
   transform: translateX(calc(var(--seg-index) * 100%));
-  transition: transform 0.35s var(--ease);
+  transition: transform 260ms var(--ease);
 }
 
 .segmented button {
   position: relative;
   z-index: 1;
   min-height: 40px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: var(--r-pill);
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-2);
+  font-weight: 500;
+  color: var(--text-3);
   white-space: nowrap;
-  transition: color 0.2s;
+  transition: color var(--t-state) var(--ease);
 }
 
 .segmented button.is-active {
@@ -974,22 +1059,21 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 8px;
   flex: none;
-  min-height: var(--tap);
+  min-height: 36px;
   padding: 0 16px;
   border-radius: var(--r-pill);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-2);
-  background: var(--glass);
-  border: 1px solid var(--rim-soft);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: transparent;
+  border: 1px solid var(--hairline-strong);
+  transition: background var(--t-state) var(--ease), color var(--t-state), border-color var(--t-state);
 }
 
 .chip.is-active {
-  color: var(--text);
-  background: var(--glass-hover);
-  border-color: var(--rim);
-  box-shadow: var(--specular);
+  color: var(--accent);
+  background: var(--accent-wash);
+  border-color: rgb(var(--accent-rgb) / 0.35);
 }
 
 .chip-ghost {
@@ -1009,7 +1093,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .card {
   padding: 16px;
   border-radius: var(--r-card);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .card-head {
@@ -1017,15 +1101,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: space-between;
   min-height: 32px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   padding: 0 4px;
 }
 
 .card-head h2,
 .section-head h1 {
   font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .section-head {
@@ -1071,9 +1155,9 @@ input[type='date']::-webkit-calendar-picker-indicator {
   height: 72px;
   margin: 4px auto 18px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(199, 210, 254, 0.55), rgba(99, 102, 241, 0.15) 60%, transparent 72%);
+  background: var(--surface-2);
   border: 1px solid var(--rim);
-  box-shadow: var(--specular), 0 0 40px -6px rgba(129, 140, 248, 0.45);
+  box-shadow: var(--specular);
   animation: breathe 5s ease-in-out infinite;
 }
 
@@ -1154,7 +1238,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(var(--ink-rgb) / 0.1);
   border: 1px solid var(--rim-soft);
   color: var(--text);
   max-width: 120px;
@@ -1200,8 +1284,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .split-badge[class*='badge-'] {
-  background: rgba(var(--badge, 165, 180, 252), 0.16);
-  border-color: rgba(var(--badge, 165, 180, 252), 0.35);
+  background: rgb(var(--accent-rgb) / 0.16);
+  border-color: rgb(var(--accent-rgb) / 0.35);
   color: rgb(var(--badge, 199, 210, 254));
 }
 
@@ -1226,8 +1310,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 13px;
   font-weight: 650;
   color: var(--accent);
-  background: rgba(129, 140, 248, 0.14);
-  border-color: rgba(165, 180, 252, 0.35);
+  background: rgb(var(--accent-rgb) / 0.14);
+  border-color: rgb(var(--accent-rgb) / 0.35);
   position: relative;
 }
 
@@ -1342,14 +1426,14 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 4px;
   padding: 3px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
   transition: background 0.25s, border-color 0.25s;
 }
 
 .set-row.is-spotted {
-  background: rgba(129, 140, 248, 0.08);
-  border-color: rgba(165, 180, 252, 0.18);
+  background: rgb(var(--accent-rgb) / 0.08);
+  border-color: rgb(var(--accent-rgb) / 0.18);
 }
 
 .set-row-head {
@@ -1401,13 +1485,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 12px;
   padding: 4px 4px 4px 14px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .schedule-row.is-today {
-  border-color: rgba(165, 180, 252, 0.3);
-  background: rgba(129, 140, 248, 0.07);
+  border-color: rgb(var(--accent-rgb) / 0.3);
+  background: rgb(var(--accent-rgb) / 0.07);
 }
 
 .schedule-day {
@@ -1423,7 +1507,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: none;
 }
 
 .glass-select-wrap {
@@ -1457,8 +1541,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 15px;
   font-weight: 600;
   color: inherit;
-  background: rgba(var(--badge, 165, 180, 252), 0.13);
-  border: 1px solid rgba(var(--badge, 165, 180, 252), 0.3);
+  background: rgb(var(--accent-rgb) / 0.13);
+  border: 1px solid rgb(var(--accent-rgb) / 0.3);
   box-shadow: var(--specular);
   -webkit-appearance: none;
   appearance: none;
@@ -1467,7 +1551,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .glass-select option {
-  background: #141826;
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -1491,8 +1575,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .routine-row {
   padding: 8px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .routine-row-top {
@@ -1525,12 +1609,12 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .inline-input:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(var(--ink-rgb) / 0.04);
 }
 
 .inline-input:focus {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(165, 180, 252, 0.45);
+  background: rgb(var(--ink-rgb) / 0.08);
+  border-color: rgb(var(--accent-rgb) / 0.45);
 }
 
 .routine-row-actions {
@@ -1574,8 +1658,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 6px;
   padding: 10px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .metric-label {
@@ -1599,9 +1683,9 @@ input[type='date']::-webkit-calendar-picker-indicator {
   position: relative;
   height: 12px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   border: 1px solid var(--rim-soft);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 3px rgb(var(--shade-rgb) / 0.35);
   overflow: hidden;
 }
 
@@ -1610,8 +1694,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   inset: 0;
   border-radius: var(--r-pill);
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.75), rgba(165, 180, 252, 0.95));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 12px rgba(129, 140, 248, 0.5);
+  background: var(--accent);
+  box-shadow: inset 0 1px 0 rgb(var(--ink-rgb) / 0.45), 0 0 12px rgb(var(--accent-rgb) / 0.5);
   transition: transform 0.6s var(--ease);
 }
 
@@ -1711,7 +1795,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-2);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--ink-rgb) / 0.05);
   border: 1px solid var(--rim-soft);
   white-space: nowrap;
 }
@@ -1821,7 +1905,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .bg-body {
   pointer-events: none;
-  fill: rgba(255, 255, 255, 0.045);
+  fill: rgb(var(--ink-rgb) / 0.045);
   stroke: var(--rim-soft);
   stroke-width: 1;
 }
@@ -1844,26 +1928,26 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .bg-muscle.is-unranked path {
-  fill: rgba(255, 255, 255, 0.08);
-  stroke: rgba(255, 255, 255, 0.16);
+  fill: rgb(var(--ink-rgb) / 0.08);
+  stroke: rgb(var(--ink-rgb) / 0.16);
 }
 
 .bg-muscle.is-hot path,
 .bg-muscle.is-selected path {
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 2.2;
   fill-opacity: 0.95;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
+  filter: drop-shadow(0 0 4px rgb(var(--ink-rgb) / 0.45));
 }
 
 .bg-muscle.is-unranked.is-hot path,
 .bg-muscle.is-unranked.is-selected path {
-  fill: rgba(255, 255, 255, 0.16);
+  fill: rgb(var(--ink-rgb) / 0.16);
 }
 
 .bg-detail {
   fill: none;
-  stroke: rgba(8, 10, 15, 0.45);
+  stroke: rgb(var(--bg-rgb) / 0.45);
   stroke-width: 1.2;
   stroke-linecap: round;
   pointer-events: none;
@@ -1899,8 +1983,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   margin-top: 12px;
   padding: 8px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .tier-legend-item {
@@ -1918,7 +2002,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   max-width: 34px;
   height: 8px;
   border-radius: var(--r-pill);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgb(var(--ink-rgb) / 0.35);
 }
 
 /* LP bars */
@@ -1941,8 +2025,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .progress-fill.lp-fill {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--tier) 65%, transparent), var(--tier));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px color-mix(in srgb, var(--tier) 45%, transparent);
+  background: var(--tier);
+  box-shadow: none;
 }
 
 /* Overview hero */
@@ -1953,7 +2037,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   padding: 22px 18px 16px;
   text-align: center;
-  background: radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--tier) 16%, transparent), transparent 70%), var(--glass);
+  background: radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--tier) 7%, transparent), transparent 70%), var(--surface-1);
 }
 
 .rank-hero .lp {
@@ -2004,15 +2088,15 @@ input[type='date']::-webkit-calendar-picker-indicator {
   min-height: 56px;
   padding: 8px 12px 8px 8px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
   text-align: left;
   user-select: text;
   transition: background 0.2s, border-color 0.2s;
 }
 
 .rank-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   border-color: var(--rim-soft);
 }
 
@@ -2218,7 +2302,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   max-width: 220px;
   padding: 8px 12px;
   border-radius: 14px;
-  background: rgba(30, 34, 48, 0.85);
+  background: rgb(var(--panel-rgb) / 0.85);
   pointer-events: none;
   font-size: 12px;
 }
@@ -2252,8 +2336,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--amber);
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: rgb(var(--warning-rgb) / 0.1);
+  border: 1px solid rgb(var(--warning-rgb) / 0.25);
 }
 
 .calc {
@@ -2273,7 +2357,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   min-height: var(--tap);
   padding: 0 14px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   border: 1px solid var(--rim-soft);
   color: var(--text-3);
 }
@@ -2303,7 +2387,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   overflow-y: auto;
   padding: 6px;
   border-radius: var(--r-row);
-  background: rgba(30, 34, 48, 0.92);
+  background: rgb(var(--panel-rgb) / 0.92);
 }
 
 .calc-list button {
@@ -2346,8 +2430,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 14px;
   padding: 12px 14px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .calc-result-body {
@@ -2403,7 +2487,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-weight: 600;
   line-height: 1.6;
   color: var(--text-2);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--ink-rgb) / 0.05);
   border: 1px solid var(--rim-soft);
   animation: fade-in 0.3s ease;
 }
@@ -2425,11 +2509,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .live-rank.tone-rankup {
-  color: #fff;
+  color: var(--text);
   font-weight: 700;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--tier) 45%, transparent), color-mix(in srgb, var(--tier) 20%, transparent));
+  background: color-mix(in srgb, var(--tier) 18%, var(--surface-2));
   border-color: var(--tier);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--tier) 45%, transparent);
+  box-shadow: none;
   animation: rank-pop 0.5s var(--ease);
 }
 
@@ -2480,7 +2564,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--tier) 45%, transparent), transparent 65%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--tier) 16%, transparent), transparent 62%);
   opacity: 0;
   transform: scale(0.6);
   transition: opacity 0.6s, transform 0.8s var(--ease);
@@ -2527,8 +2611,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 10px;
   padding: 8px 12px 8px 8px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .rankup-crests {
@@ -2617,7 +2701,7 @@ strong.m-f {
   font-size: 11px;
   font-weight: 650;
   color: var(--text-2);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   border: 1px solid var(--rim-soft);
   white-space: nowrap;
 }
@@ -2669,19 +2753,19 @@ strong.m-f {
 }
 
 .kcal-ring-track {
-  stroke: rgba(255, 255, 255, 0.07);
+  stroke: rgb(var(--ink-rgb) / 0.07);
 }
 
 .kcal-ring-fill {
   stroke: url(#kcal-grad);
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.5));
+  filter: drop-shadow(0 0 6px rgb(var(--accent-rgb) / 0.5));
   transition: stroke-dashoffset 0.6s var(--ease);
 }
 
 .kcal-ring.is-over .kcal-ring-fill {
   stroke: var(--danger);
-  filter: drop-shadow(0 0 6px rgba(248, 113, 113, 0.45));
+  filter: drop-shadow(0 0 6px rgb(var(--danger-rgb) / 0.45));
 }
 
 .kcal-ring-text {
@@ -2767,7 +2851,7 @@ strong.m-f {
 
 .macro-fill {
   background: var(--macro);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 10px color-mix(in srgb, var(--macro) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgb(var(--ink-rgb) / 0.45), 0 0 10px color-mix(in srgb, var(--macro) 55%, transparent);
 }
 
 .macro-bar.is-over .macro-fill {
@@ -2906,8 +2990,8 @@ strong.m-f {
   gap: 6px;
   padding: 4px 2px 4px 4px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .entry-main {
@@ -2923,7 +3007,7 @@ strong.m-f {
 }
 
 .entry-main:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgb(var(--ink-rgb) / 0.03);
 }
 
 .entry-name {
@@ -3028,13 +3112,13 @@ strong.m-f {
   align-items: center;
   gap: 6px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
   transition: background 0.2s;
 }
 
 .food-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .food-row-main {
@@ -3208,8 +3292,8 @@ strong.m-f {
   font-size: 12px;
   font-weight: 650;
   color: var(--accent);
-  background: rgba(129, 140, 248, 0.14);
-  border: 1px solid rgba(165, 180, 252, 0.3);
+  background: rgb(var(--accent-rgb) / 0.14);
+  border: 1px solid rgb(var(--accent-rgb) / 0.3);
 }
 
 /* Custom food + targets */
@@ -3226,8 +3310,8 @@ strong.m-f {
   border-radius: var(--r-row);
   font-size: 14px;
   color: var(--text-2);
-  background: rgba(129, 140, 248, 0.1);
-  border: 1px solid rgba(165, 180, 252, 0.25);
+  background: rgb(var(--accent-rgb) / 0.1);
+  border: 1px solid rgb(var(--accent-rgb) / 0.25);
 }
 
 .custom-note strong {
@@ -3269,9 +3353,9 @@ strong.m-f {
   aspect-ratio: 4 / 3;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgb(var(--shade-rgb) / 0.45);
   border: 1px solid var(--rim-soft);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 3px rgb(var(--shade-rgb) / 0.35);
 }
 
 .scanner-view.is-blocked {
@@ -3292,8 +3376,8 @@ strong.m-f {
   top: 30%;
   bottom: 30%;
   border-radius: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 0 9999px rgba(3, 5, 10, 0.45);
+  border: 2px solid rgb(var(--ink-rgb) / 0.85);
+  box-shadow: 0 0 0 9999px rgb(var(--scrim-rgb) / 0.45);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -3305,7 +3389,7 @@ strong.m-f {
   height: 2px;
   border-radius: 2px;
   background: var(--accent);
-  box-shadow: 0 0 12px rgba(129, 140, 248, 0.9);
+  box-shadow: none;
   animation: scan-sweep 1.8s ease-in-out infinite alternate;
 }
 
@@ -3320,7 +3404,7 @@ strong.m-f {
 
 .scanner-frame.is-detected {
   border-color: var(--emerald);
-  box-shadow: 0 0 0 9999px rgba(3, 5, 10, 0.55), 0 0 28px rgba(52, 211, 153, 0.7);
+  box-shadow: 0 0 0 9999px rgb(var(--scrim-rgb) / 0.55), 0 0 28px rgb(var(--positive-rgb) / 0.7);
 }
 
 .scanner-frame.is-detected .scanner-line {
@@ -3335,7 +3419,7 @@ strong.m-f {
 
 .scanner-torch.is-on {
   color: var(--amber);
-  border-color: rgba(251, 191, 36, 0.45);
+  border-color: rgb(var(--warning-rgb) / 0.45);
 }
 
 .scanner-placeholder {
@@ -3595,7 +3679,7 @@ strong.m-f {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, rgba(129, 140, 248, 0.45), rgba(30, 27, 75, 0.9) 75%);
+  background: var(--surface-3);
   color: var(--text);
   font-weight: 700;
   font-size: 0.42em;
@@ -3617,12 +3701,12 @@ strong.m-f {
   width: 36px;
   height: 36px;
   border: 1.5px solid var(--accent-strong);
-  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.12);
 }
 
 .profile-btn.is-active > * {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.3);
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.3);
 }
 
 .profile-btn:active {
@@ -3697,7 +3781,7 @@ strong.m-f {
   border-radius: 50%;
   font-size: 88px;
   border: 1.5px solid var(--accent-strong);
-  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.12), 0 10px 28px -10px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 4px rgb(var(--accent-rgb) / 0.12), 0 10px 28px -10px rgb(var(--accent-rgb) / 0.6);
   transition: transform 0.15s var(--ease);
 }
 
@@ -3720,9 +3804,9 @@ strong.m-f {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.95), rgba(99, 102, 241, 0.95));
+  background: var(--accent);
   border: 2px solid var(--bg);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .pf-avatar-badge .spinner {
@@ -3783,7 +3867,7 @@ strong.m-f {
 }
 
 .pf-name-input:focus {
-  border-color: rgba(165, 180, 252, 0.55);
+  border-color: rgb(var(--accent-rgb) / 0.55);
 }
 
 .pf-name-save {
@@ -3798,14 +3882,14 @@ strong.m-f {
   max-width: 340px;
   padding: 10px 16px 10px 12px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
   text-align: left;
   transition: background 0.2s;
 }
 
 .pf-rank:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
 }
 
 .pf-rank-text {
@@ -3872,7 +3956,7 @@ strong.m-f {
   align-self: center;
   margin-right: 1px;
   color: var(--accent-strong);
-  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.55));
+  filter: drop-shadow(0 0 6px rgb(var(--accent-rgb) / 0.55));
 }
 
 .pf-data-text {
@@ -3911,8 +3995,8 @@ strong.m-f {
   margin-bottom: 12px;
   padding: 8px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
   font-size: 13px;
 }
 
@@ -3996,13 +4080,13 @@ strong.m-f {
   width: var(--cell, 11px);
   height: var(--cell, 11px);
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  background: rgb(var(--ink-rgb) / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(var(--ink-rgb) / 0.04);
 }
 
 .att-cell.is-active {
   background: var(--accent-strong);
-  box-shadow: inset 0 0 0 1px rgba(165, 180, 252, 0.6), 0 0 6px rgba(129, 140, 248, 0.45);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.6), 0 0 6px rgb(var(--accent-rgb) / 0.45);
 }
 
 .att-cell.is-future {
@@ -4044,8 +4128,8 @@ strong.m-f {
   max-width: 44px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgb(var(--ink-rgb) / 0.1);
+  background: rgb(var(--ink-rgb) / 0.04);
   color: var(--text-3);
   font-size: 14px;
   font-weight: 650;
@@ -4054,8 +4138,8 @@ strong.m-f {
 
 .rir-btn.is-set {
   color: var(--text);
-  background: rgba(129, 140, 248, 0.16);
-  border-color: rgba(165, 180, 252, 0.3);
+  background: rgb(var(--accent-rgb) / 0.16);
+  border-color: rgb(var(--accent-rgb) / 0.3);
 }
 
 .last-time {
@@ -4083,7 +4167,7 @@ strong.m-f {
 .last-set {
   padding: 2px 7px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.06);
   color: var(--text-2);
   white-space: nowrap;
 }
@@ -4102,8 +4186,8 @@ strong.m-f {
   padding: 6px 12px;
   border: none;
   border-radius: var(--r-pill);
-  background: rgba(165, 180, 252, 0.18);
-  color: rgb(199, 210, 254);
+  background: rgb(var(--accent-rgb) / 0.18);
+  color: rgb(var(--accent-rgb));
   font: inherit;
   font-weight: 650;
   cursor: pointer;
@@ -4134,24 +4218,25 @@ strong.m-f {
   min-height: 34px;
   padding: 0 10px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgb(var(--ink-rgb) / 0.1);
+  background: rgb(var(--ink-rgb) / 0.05);
   color: var(--text);
   font: inherit;
   font-size: 13px;
 }
 
 .muscle-select option {
-  color: #0f172a;
+  color: var(--text);
+  background: var(--surface-2);
 }
 
 .muscle-pick.needs-muscle .muscle-select {
-  border-color: rgba(251, 191, 36, 0.6);
+  border-color: rgb(var(--warning-rgb) / 0.6);
 }
 
 .muscle-warning {
   padding-left: 32px;
-  color: rgb(252, 211, 77);
+  color: rgb(var(--warning-rgb));
 }
 
 .suggest-row {
@@ -4185,8 +4270,8 @@ strong.m-f {
   align-items: center;
   padding: 10px 12px;
   border-radius: var(--r-row);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -4215,21 +4300,21 @@ strong.m-f {
   grid-row: 1 / span 2;
   font-size: 13px;
   font-weight: 650;
-  color: rgb(165, 180, 252);
+  color: rgb(var(--accent-rgb));
   white-space: nowrap;
 }
 
 .muscle-tag {
   padding: 1px 8px;
   border-radius: var(--r-pill);
-  background: rgba(129, 140, 248, 0.18);
-  color: rgb(199, 210, 254);
+  background: rgb(var(--accent-rgb) / 0.18);
+  color: rgb(var(--accent-rgb));
   font-size: 11px;
   font-weight: 600;
 }
 
 .muscle-tag.is-secondary {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgb(var(--ink-rgb) / 0.07);
   color: var(--text-2);
 }
 
@@ -4254,7 +4339,7 @@ strong.m-f {
   gap: 6px 10px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgb(var(--ink-rgb) / 0.07);
 }
 
 .micro-total {
@@ -4298,7 +4383,7 @@ strong.m-f {
 }
 
 .water-fill {
-  background: linear-gradient(90deg, rgb(56, 189, 248), rgb(14, 165, 233));
+  background: rgb(var(--macro-c-rgb));
 }
 
 .water-actions {
@@ -4350,12 +4435,12 @@ strong.m-f {
   gap: 6px;
   padding: 10px 12px;
   border-radius: var(--r-row);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgb(var(--ink-rgb) / 0.035);
+  border: 1px solid rgb(var(--ink-rgb) / 0.06);
 }
 
 .goal-row.is-done {
-  border-color: rgba(52, 211, 153, 0.3);
+  border-color: rgb(var(--positive-rgb) / 0.3);
 }
 
 .goal-top {
@@ -4379,7 +4464,7 @@ strong.m-f {
   gap: 4px;
   padding: 2px 8px;
   border-radius: var(--r-pill);
-  background: rgba(52, 211, 153, 0.16);
+  background: rgb(var(--positive-rgb) / 0.16);
   color: var(--emerald);
   font-size: 11px;
   font-weight: 650;
@@ -4407,7 +4492,7 @@ strong.m-f {
 }
 
 .goal-fill {
-  background: linear-gradient(90deg, rgb(129, 140, 248), rgb(52, 211, 153));
+  background: var(--accent);
 }
 
 .goal-foot {
@@ -4454,9 +4539,9 @@ strong.m-f {
   place-items: center;
   font-size: 13px;
   font-weight: 650;
-  color: #fff;
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.55), rgba(99, 102, 241, 0.38));
-  border: 1px solid rgba(165, 180, 252, 0.4);
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 1px solid rgb(var(--accent-rgb) / 0.4);
 }
 
 .install-text {
@@ -4501,8 +4586,8 @@ strong.m-f {
 }
 
 .switch.is-on {
-  background: linear-gradient(180deg, rgba(129, 140, 248, 0.75), rgba(99, 102, 241, 0.6));
-  border-color: rgba(165, 180, 252, 0.5);
+  background: var(--accent);
+  border-color: rgb(var(--accent-rgb) / 0.5);
 }
 
 .switch:disabled {
@@ -4516,8 +4601,8 @@ strong.m-f {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background: var(--text);
+  box-shadow: 0 2px 6px rgb(var(--shade-rgb) / 0.35);
   transition: transform 0.25s var(--ease);
 }
 
@@ -4758,4 +4843,16 @@ strong.m-f {
   .set-row-head .col-spot {
     display: none;
   }
+}
+
+/* =====================================================================
+   Graphite & Moss: additions
+   ===================================================================== */
+
+.pill-btn-primary:not(:disabled):active {
+  background: var(--accent-strong);
+}
+
+.nav-tab.is-active span {
+  color: var(--text);
 }
