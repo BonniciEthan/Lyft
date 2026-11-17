@@ -9,7 +9,7 @@ import { Avatar } from './Avatar.jsx';
 import { AttendanceGrid } from './AttendanceGrid.jsx';
 import { RankCrest } from './TierCrest.jsx';
 import { ReminderCard } from './ReminderControls.jsx';
-import { CameraIcon, CheckIcon, ChevronLeft, CloseIcon, EditIcon } from './Icons.jsx';
+import { CameraIcon, CheckIcon, ChevronLeft, CloseIcon, EditIcon, FlameIcon } from './Icons.jsx';
 import { tierInk } from '../lib/rankFormat.js';
 import { MetricReadout } from './ui/MetricReadout.jsx';
 import { Segmented } from './Controls.jsx';
@@ -96,8 +96,22 @@ function RankSummary({ state, profile, onGoToRank }) {
   );
 }
 
-function Stat({ label, value, unit }) {
-  return <MetricReadout className="pf-stat" label={label} value={value} unit={unit} size="lg" align="center" />;
+function Stat({ label, value, unit, icon }) {
+  return (
+    <MetricReadout
+      className="pf-stat"
+      label={label}
+      value={
+        <>
+          {icon}
+          {value}
+        </>
+      }
+      unit={unit}
+      size="lg"
+      align="center"
+    />
+  );
 }
 
 const THEME_LABELS = { system: 'System', dark: 'Dark', light: 'Light' };
@@ -200,7 +214,7 @@ export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBa
         </section>
 
         <section className="pf-stats" aria-label="Key stats">
-          <Stat label="Current streak" value={streak} unit={streak === 1 ? 'day' : 'days'} />
+          <Stat label="Current streak" value={streak} unit={streak === 1 ? 'day' : 'days'} icon={<FlameIcon width={18} height={18} className="pf-flame" />} />
           <Stat label="Workouts" value={totals.workouts} />
           <Stat label="Total sets" value={totals.sets} />
         </section>

@@ -3968,7 +3968,7 @@ strong.m-f {
 .pf-flame {
   align-self: center;
   margin-right: 1px;
-  color: var(--accent-strong);
+  color: var(--warning);
 }
 
 .pf-data-text {
