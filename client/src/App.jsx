@@ -19,6 +19,9 @@ import { mergeCache } from './lib/openFoodFactsService.js';
 import { InstallSheet, shouldShowInstallHint } from './components/InstallSheet.jsx';
 import { ReminderPrompt, shouldAskReminder } from './components/ReminderControls.jsx';
 import { resumeReminder } from './lib/reminders.js';
+import { PrivacyPage } from './components/PrivacyPage.jsx';
+import { AgeGate } from './components/AgeGate.jsx';
+import { isAgeConfirmed } from './lib/privacy.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
 
@@ -35,6 +38,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [ageOk, setAgeOk] = useState(isAgeConfirmed);
   const [toasts, setToasts] = useState([]);
   const [confirmRequest, setConfirmRequest] = useState(null);
   const confirmResolver = useRef(null);
@@ -216,7 +221,9 @@ export default function App() {
         <span className="orb orb-slate" />
       </div>
 
-      {profileOpen ? (
+      {!ageOk ? (
+        <AgeGate onConfirmed={() => setAgeOk(true)} onOpenPrivacy={() => setPrivacyOpen(true)} />
+      ) : profileOpen ? (
         <ProfilePage
           state={state}
           update={update}
@@ -224,6 +231,7 @@ export default function App() {
           onBack={() => leaveProfile()}
           onGoToRank={() => leaveProfile('rank')}
           onOpenBackup={() => setBackupOpen(true)}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onShowInstall={() => setInstallOpen(true)}
         />
@@ -276,8 +284,9 @@ export default function App() {
         askConfirm={askConfirm}
         toast={toast}
       />
-      <InstallSheet open={installOpen} onClose={() => setInstallOpen(false)} />
-      <ReminderPrompt open={reminderAskOpen} onClose={() => setReminderAskOpen(false)} toast={toast} />
+      <PrivacyPage open={privacyOpen} onClose={() => setPrivacyOpen(false)} askConfirm={askConfirm} toast={toast} />
+      <InstallSheet open={ageOk && installOpen} onClose={() => setInstallOpen(false)} />
+      <ReminderPrompt open={ageOk && reminderAskOpen} onClose={() => setReminderAskOpen(false)} toast={toast} />
       <ConfirmDialog request={confirmRequest} onResolve={resolveConfirm} />
       <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>

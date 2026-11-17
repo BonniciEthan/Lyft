@@ -192,3 +192,27 @@ somewhere reminders work, it asks once whether to turn them on.
 
 Web reminders need the push server deployed once. See [push-worker/README.md](push-worker/README.md).
 Until `VITE_PUSH_URL` is set in `client/.env.friends`, the web app hides the reminder card and doesn't mention reminders; the Android and desktop apps are unaffected.
+
+## Privacy
+
+Lyft has no accounts, ads, analytics, cookies or AI features. The app shows the full notice under
+**Profile → Privacy & data**, which also has a **Delete all data on this device** button. On first
+launch it asks people to confirm they are 13 or older; the answer is stored only on the device.
+
+| Service | When it's used | What it receives |
+| --- | --- | --- |
+| [Open Food Facts](https://world.openfoodfacts.org) | Food search and barcode lookups | The search text or barcode, plus the IP address |
+| Lyft push server (Cloudflare Workers + KV) | Web app, only if the daily reminder is on | The browser's push endpoint URL |
+| Browser push services (FCM, Apple, Mozilla, WNS) | Delivering the reminder | An empty push |
+| GitHub Pages | Hosting the web app | Standard server logs, kept by GitHub |
+| Your own Lyft server (server edition) | When you press Save / Load | The full app state |
+
+The Inter font is bundled with the app, so no font requests go to Google.
+
+## Third-party licenses
+
+- Inter font: SIL Open Font License 1.1 ([`client/public/fonts/Inter-OFL.txt`](client/public/fonts/Inter-OFL.txt))
+- JavaScript dependencies shipped in the app and server (React, ZXing, Capacitor, Tauri plugins, Express, better-sqlite3): MIT, ISC, Apache-2.0 or BSD
+- Rust crates in the desktop app: mostly MIT / Apache-2.0. `cssparser`, `selectors`, `dtoa-short` and `option-ext` are MPL-2.0, which is fine unmodified; any change to their files must be shared under MPL-2.0.
+- `push-worker` dev tooling (wrangler → sharp/libvips) includes LGPL-3.0 binaries. They are never deployed or shipped.
+- CasaOS tile icon: `wger` from dashboard-icons.

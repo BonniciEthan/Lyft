@@ -105,7 +105,7 @@ function Stat({ label, value, unit, icon }) {
   );
 }
 
-export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBackup, onOpenSettings, onShowInstall }) {
+export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBackup, onOpenPrivacy, onOpenSettings, onShowInstall }) {
   const profile = useMemo(() => normalizeProfile(state.profile), [state.profile]);
   const today = todayKey();
   const streak = useMemo(() => calculateCurrentStreak(state.logs, state.split, today), [state.logs, state.split, today]);
@@ -218,6 +218,9 @@ export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBa
                 <GearIcon width={18} height={18} /> Server settings
               </button>
             )}
+            <button type="button" className="btn btn-glass" onClick={onOpenPrivacy}>
+              Privacy &amp; data
+            </button>
           </div>
         </section>
       </main>

@@ -9,7 +9,6 @@
  * Strategy:
  * - Page navigations: network first (always get the newest index.html), cache fallback offline.
  * - Same-origin files: cache first. Hashed file names never change, so this is always safe.
- * - Google Fonts: cache first after the first load (stale fonts are harmless).
  * - Everything else (Open Food Facts, the sync API): not intercepted.
  *
  * It also shows the 9pm daily reminder when the push server pings it (see lib/reminders.js).
@@ -31,7 +30,6 @@ function listFiles(dir, root = dir) {
 const workerSource = (version, files) => `/* Lyft offline service worker (generated at build time) */
 const CACHE = 'lyft-${version}';
 const PRECACHE = ${JSON.stringify(['./', './index.html', ...files.map((f) => `./${f}`)], null, 0)};
-const FONT_CACHE = 'lyft-fonts';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,7 +41,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lyft-') && k !== CACHE && k !== FONT_CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lyft-') && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -118,21 +116,6 @@ self.addEventListener('fetch', (event) => {
       )
     );
     return;
-  }
-
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(
-      caches.open(FONT_CACHE).then((cache) =>
-        cache.match(req).then(
-          (hit) =>
-            hit ||
-            fetch(req).then((res) => {
-              if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
-              return res;
-            })
-        )
-      )
-    );
   }
 });
 `;
