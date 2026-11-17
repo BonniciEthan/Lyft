@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { computeRanks, getMuscleTarget, MUSCLES, rankHistory } from '../lib/rankingEngine.js';
 import { formatWeight, fromKg, hasBodyweight, normalizeProfile, parseWeightInput, roundForUnit, setBodyweight, setSex, setUnit } from '../lib/lifterProfileStore.js';
-import { formatSet, targetOptions } from '../lib/rankFormat.js';
+import { formatSet, targetOptions, tierInk } from '../lib/rankFormat.js';
+import { MetricReadout } from './ui/MetricReadout.jsx';
 import { formatShortDate, todayKey } from '../lib/dates.js';
 import { Segmented } from './Controls.jsx';
 import { ChevronDown } from './Icons.jsx';
@@ -148,7 +149,7 @@ function TargetCallout({ target, unit, prefix }) {
   const opts = targetOptions(target, target.exercise?.cls, unit);
   if (!opts.length) return null;
   return (
-    <div className="target-callout" style={{ '--tier': target.tier?.color }}>
+    <div className="target-callout" style={{ '--tier': tierInk(target.tier) }}>
       <div className="target-title">
         To reach <strong>{target.label}</strong> <span className="tabular">({target.minScore})</span>
       </div>
@@ -178,7 +179,7 @@ function ExerciseRow({ ex, unit, onPick }) {
         </span>
         <span className="rank-row-end">
           <span className="rank-row-score tabular">{ex.rank.score}</span>
-          <span className="rank-row-label" style={{ color: ex.rank.tier.color }}>
+          <span className="rank-row-label" style={{ color: tierInk(ex.rank.tier) }}>
             {ex.rank.label}
           </span>
         </span>
@@ -196,7 +197,7 @@ function MuscleSheet({ muscle, profile, onClose, onPickExercise }) {
       <div className="sheet-hero">
         <RankCrest rank={rank} size={76} />
         <div className="sheet-hero-body">
-          <span className="rank-label" style={{ color: rank.tier?.color }}>
+          <span className="rank-label" style={{ color: tierInk(rank.tier) }}>
             {rank.label}
           </span>
           <span className="rank-score tabular">
@@ -232,16 +233,13 @@ function MuscleSheet({ muscle, profile, onClose, onPickExercise }) {
 function HeroBanner({ overall }) {
   const { rank } = overall;
   return (
-    <div className="glass-panel card rank-hero" style={{ '--tier': rank.tier?.color || 'var(--text-3)' }}>
+    <div className="glass-panel card rank-hero" style={{ '--tier': tierInk(rank.tier) || 'var(--text-3)' }}>
       <RankCrest rank={rank} size={112} className="rank-hero-crest" />
       <div className="rank-hero-label">Overall Rank</div>
-      <div className="rank-hero-tier" style={{ color: rank.tier?.color }}>
+      <div className="rank-hero-tier" style={{ color: tierInk(rank.tier) }}>
         {rank.label}
       </div>
-      <div className="rank-hero-score tabular">
-        {rank.ranked ? rank.score : 0}
-        <small> / 1000</small>
-      </div>
+      <MetricReadout className="rank-hero-score" value={rank.ranked ? rank.score : 0} unit="/ 1000 SR" size="display" align="center" />
       <LpBar rank={rank} />
       <div className="rank-hero-count tabular">
         {overall.rankedMuscles} / {overall.totalMuscles} muscles ranked
@@ -265,7 +263,7 @@ function MuscleBreakdown({ muscles, onOpen }) {
             </span>
             <span className="rank-row-end">
               <span className="rank-row-score tabular">{m.rank.ranked ? m.rank.score : '–'}</span>
-              <span className="rank-row-label" style={{ color: m.rank.tier?.color }}>
+              <span className="rank-row-label" style={{ color: tierInk(m.rank.tier) }}>
                 {m.rank.label}
               </span>
             </span>
@@ -305,7 +303,7 @@ export function RankTab({ state, update }) {
       <div className="section-head">
         <h1>Rank</h1>
         {ranks && (
-          <span className="rank-head-badge" style={{ color: ranks.overall.rank.tier?.color }}>
+          <span className="rank-head-badge" style={{ color: tierInk(ranks.overall.rank.tier) }}>
             <RankCrest rank={ranks.overall.rank} size={26} />
             {ranks.overall.rank.label}
           </span>

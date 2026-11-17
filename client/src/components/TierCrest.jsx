@@ -47,10 +47,24 @@ function Chevrons({ count, color }) {
   const rows = [];
   for (let i = 0; i < count; i++) {
     const y = 40 + i * 8 - (count - 1) * 4;
-    rows.push(<path key={i} d={`M41 ${y + 4} L50 ${y - 2} L59 ${y + 4}`} stroke={color} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />);
+    rows.push(<path key={i} d={`M41 ${y + 4} L50 ${y - 2} L59 ${y + 4}`} stroke={color} strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />);
   }
   return <g>{rows}</g>;
 }
+
+/* Materials: each tier is a physical finish rather than a flat hue. hi / base / lo are the
+   highlight, body and shadow stops of the metal; ink is the engraved chevron / gem colour. */
+const MATERIALS = {
+  wood: { hi: '#C7A37E', base: '#8A6440', lo: '#4E3620', ink: '#EAD9C6', brushed: 0.1 }, // satin walnut
+  bronze: { hi: '#E7B98C', base: '#A86F3E', lo: '#5E3A1C', ink: '#F6E1CB', brushed: 0.16 }, // anodized bronze
+  silver: { hi: '#E9EDF0', base: '#A3ACB4', lo: '#5B636B', ink: '#FFFFFF', brushed: 0.2 }, // brushed titanium
+  gold: { hi: '#F4E2A6', base: '#C9A548', lo: '#7A5F1C', ink: '#FFF6DA', brushed: 0.16 }, // satin gold
+  platinum: { hi: '#DCEDEB', base: '#8FB5B2', lo: '#476866', ink: '#F4FFFE', brushed: 0.18 }, // cool pewter
+  diamond: { hi: '#D7E4F6', base: '#7F9FCB', lo: '#3C5578', ink: '#FFFFFF', brushed: 0.08 }, // steel-blue glass
+  champion: { hi: '#D8CCE8', base: '#8F78AE', lo: '#4A3B5F', ink: '#F6F0FF', brushed: 0.1 }, // smoked amethyst
+  titan: { hi: '#EDBE9C', base: '#B56E43', lo: '#5F331A', ink: '#FCE6D6', brushed: 0.16 }, // burnished copper
+  olympian: { hi: '#3A3D40', base: '#1A1C1E', lo: '#08090A', ink: '#F1E3B0', brushed: 0.12, rim: true }, // obsidian
+};
 
 function CrestImpl({ tier, size = 44, className = '', title }) {
   const raw = useId().replace(/:/g, '');
@@ -60,77 +74,49 @@ function CrestImpl({ tier, size = 44, className = '', title }) {
   if (!t) {
     return (
       <svg className={`tier-crest is-unranked ${className}`} width={size} height={size} viewBox="0 0 100 100" role="img" aria-label={title || 'Unranked'}>
-        <path d={SHIELD} fill="rgba(255,255,255,0.04)" stroke="var(--text-3)" strokeWidth="2.5" strokeDasharray="5 4" />
-        <path d="M43 48 H57" stroke="var(--text-3)" strokeWidth="3" strokeLinecap="round" />
+        <path d={SHIELD} fill="none" stroke="var(--text-3)" strokeWidth="2" strokeDasharray="4 4" />
+        <path d="M44 48 H56" stroke="var(--text-3)" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
     );
   }
 
-  const c = t.color;
+  const m = MATERIALS[t.id] || { hi: mix(t.color, 'white', 0.55), base: t.color, lo: mix(t.color, 'black', 0.45), ink: '#fff', brushed: 0.12 };
   const level = t.index; // 0..8
   const isOlympian = t.id === 'olympian';
-  const light = mix(c, 'white', 0.55);
-  const dark = mix(c, 'black', 0.45);
   const wingLayers = level >= 3 ? Math.min(3, level - 2) : 0; // gold 1, plat 2, diamond+ 3
   const ornate = level >= 6;
+  const trim = isOlympian ? m.ink : m.hi;
 
   const metal = `url(#${id('metal')})`;
-  const wingFill = `url(#${id('wing')})`;
 
   return (
     <svg className={`tier-crest tier-${t.id} ${className}`} width={size} height={size} viewBox="0 0 100 100" role="img" aria-label={title || t.name}>
       <defs>
-        <linearGradient id={id('metal')} x1="0" y1="0" x2="0.35" y2="1">
-          {isOlympian ? (
-            <>
-              <stop offset="0" stopColor="#FEF9C3" />
-              <stop offset="0.3" stopColor="#FACC15" />
-              <stop offset="0.55" stopColor="#F472B6" />
-              <stop offset="0.78" stopColor="#60A5FA" />
-              <stop offset="1" stopColor="#A855F7" />
-            </>
-          ) : (
-            <>
-              <stop offset="0" stopColor={light} />
-              <stop offset="0.5" stopColor={c} />
-              <stop offset="1" stopColor={dark} />
-            </>
-          )}
+        <linearGradient id={id('metal')} x1="0.1" y1="0" x2="0.4" y2="1">
+          <stop offset="0" stopColor={m.hi} />
+          <stop offset="0.48" stopColor={m.base} />
+          <stop offset="1" stopColor={m.lo} />
         </linearGradient>
-        <linearGradient id={id('wing')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={isOlympian ? '#FEF08A' : light} />
-          <stop offset="1" stopColor={isOlympian ? '#C084FC' : dark} />
+        <linearGradient id={id('sheen')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.38" />
+          <stop offset="0.38" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        <linearGradient id={id('gem')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
-          <stop offset="0.45" stopColor={isOlympian ? '#F9A8D4' : light} />
-          <stop offset="1" stopColor={isOlympian ? '#818CF8' : c} />
-        </linearGradient>
-        <linearGradient id={id('sheen')} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity="0.55" />
-          <stop offset="0.45" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-        {ornate && (
-          <radialGradient id={id('glow')} cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor={c} stopOpacity="0.6" />
-            <stop offset="1" stopColor={c} stopOpacity="0" />
-          </radialGradient>
+        {isOlympian && (
+          <linearGradient id={id('rim')} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#E9D8A6" />
+            <stop offset="0.5" stopColor="#9FC2C0" />
+            <stop offset="1" stopColor="#B7A3CF" />
+          </linearGradient>
         )}
+        <filter id={id('brush')} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9 0.04" numOctaves="2" seed="7" />
+          <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0" />
+          <feComposite in2="SourceGraphic" operator="in" />
+        </filter>
       </defs>
 
-      {ornate && <circle cx="50" cy="48" r="48" fill={`url(#${id('glow')})`} />}
-
-      {isOlympian && (
-        <g stroke="#FDE68A" strokeWidth="1.4" strokeLinecap="round" opacity="0.7">
-          {Array.from({ length: 12 }, (_, i) => {
-            const a = (i / 12) * Math.PI * 2;
-            return <line key={i} x1={50 + Math.cos(a) * 40} y1={48 + Math.sin(a) * 40} x2={50 + Math.cos(a) * 47} y2={48 + Math.sin(a) * 47} />;
-          })}
-        </g>
-      )}
-
       {wingLayers > 0 && (
-        <g fill={wingFill} stroke={dark} strokeWidth="0.8" strokeLinejoin="round">
+        <g fill={metal} stroke={m.lo} strokeWidth="0.6" strokeLinejoin="round">
           {WINGS.slice(0, wingLayers).map((d, i) => (
             <g key={i}>
               <path d={d} />
@@ -140,23 +126,24 @@ function CrestImpl({ tier, size = 44, className = '', title }) {
         </g>
       )}
 
-      {ornate && <Laurel color={isOlympian ? '#FDE68A' : light} />}
+      {ornate && <Laurel color={trim} />}
 
-      <path d={SHIELD} fill={metal} stroke={dark} strokeWidth="1.6" strokeLinejoin="round" />
-      <path d={SHIELD_INNER} fill="none" stroke="#fff" strokeOpacity="0.35" strokeWidth="1.2" />
+      <path d={SHIELD} fill={metal} stroke={isOlympian ? `url(#${id('rim')})` : m.lo} strokeWidth={isOlympian ? 2 : 1.2} strokeLinejoin="round" />
+      <path d={SHIELD} fill="#fff" opacity={m.brushed} filter={`url(#${id('brush')})`} />
+      <path d={SHIELD_INNER} fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="1" />
       <path d={SHIELD} fill={`url(#${id('sheen')})`} />
 
       {level < 3 ? (
-        <Chevrons count={level + 1} color={mix(c, 'white', 0.75)} />
+        <Chevrons count={level + 1} color={m.ink} />
       ) : (
         <g>
-          <polygon points={GEM.outer} fill={`url(#${id('gem')})`} stroke="#fff" strokeOpacity="0.8" strokeWidth="1.1" strokeLinejoin="round" />
-          <path d={GEM.facets} stroke="#fff" strokeOpacity="0.55" strokeWidth="0.8" fill="none" />
+          <polygon points={GEM.outer} fill={m.ink} fillOpacity="0.9" stroke={m.lo} strokeOpacity="0.6" strokeWidth="0.8" strokeLinejoin="round" />
+          <path d={GEM.facets} stroke={m.lo} strokeOpacity="0.45" strokeWidth="0.7" fill="none" />
         </g>
       )}
 
-      {ornate && <path d={CROWN} fill={isOlympian ? '#FDE68A' : light} stroke={dark} strokeWidth="1" strokeLinejoin="round" />}
-      {level === 8 && <circle cx="50" cy="5.5" r="2.2" fill="#fff" />}
+      {ornate && <path d={CROWN} fill={trim} stroke={m.lo} strokeWidth="0.8" strokeLinejoin="round" />}
+      {level === 8 && <circle cx="50" cy="5.5" r="1.8" fill={m.ink} />}
     </svg>
   );
 }

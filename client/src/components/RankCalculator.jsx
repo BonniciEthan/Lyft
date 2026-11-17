@@ -5,6 +5,7 @@ import { RankCrest } from './TierCrest.jsx';
 import { Stepper } from './Controls.jsx';
 import { SearchIcon } from './Icons.jsx';
 import { LpBar } from './RankBits.jsx';
+import { tierInk } from '../lib/rankFormat.js';
 
 /** Hypothetical-set sandbox. Never writes to state. */
 export const RankCalculator = forwardRef(function RankCalculator({ state, profile, ranks, preset }, ref) {
@@ -109,7 +110,7 @@ export const RankCalculator = forwardRef(function RankCalculator({ state, profil
         <RankCrest rank={rank} size={64} />
         <div className="calc-result-body">
           <div className="calc-result-head">
-            <span className="rank-label" style={{ color: rank.tier?.color }}>
+            <span className="rank-label" style={{ color: tierInk(rank.tier) }}>
               {rank.label}
             </span>
             <span className="rank-score tabular">{rank.ranked ? rank.score : '–'}</span>

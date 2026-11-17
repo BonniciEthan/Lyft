@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatWeight } from '../lib/lifterProfileStore.js';
-import { formatSet } from '../lib/rankFormat.js';
+import { formatSet, tierInk } from '../lib/rankFormat.js';
 import { Modal } from './Modal.jsx';
 import { RankCrest } from './TierCrest.jsx';
 import { LpBar } from './RankBits.jsx';
@@ -19,7 +19,7 @@ function Promotion({ from, to, title, detail }) {
         <span className="rank-row-name">{title}</span>
         {detail && <span className="rank-row-sub tabular">{detail}</span>}
       </span>
-      <span className="rank-row-label" style={{ color: to.tier?.color }}>
+      <span className="rank-row-label" style={{ color: tierInk(to.tier) }}>
         {to.label}
       </span>
     </li>
@@ -58,13 +58,13 @@ export function RankUpModal({ diff, unit, onClose }) {
         </button>
       }
     >
-      <div className={`rankup-hero ${revealed ? 'is-revealed' : ''}`} style={{ '--tier': head.to.tier?.color }}>
+      <div className={`rankup-hero ${revealed ? 'is-revealed' : ''}`} style={{ '--tier': tierInk(head.to.tier) }}>
         <div className="rankup-stage">
           <RankCrest rank={head.from} size={120} className="rankup-old" />
           <RankCrest rank={head.to} size={120} className="rankup-new" />
         </div>
         <div className="rank-hero-label">{head.label}</div>
-        <div className="rank-hero-tier" style={{ color: head.to.tier?.color }}>
+        <div className="rank-hero-tier" style={{ color: tierInk(head.to.tier) }}>
           {head.to.label}
         </div>
         <div className="rankup-from">from {head.from.label}</div>

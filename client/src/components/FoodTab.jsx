@@ -30,6 +30,7 @@ import { cachedProducts, lookupBarcode } from '../lib/openFoodFactsService.js';
 import { normalizeProfile, parseWeightInput, setBodyweight, setSex } from '../lib/lifterProfileStore.js';
 import { uid } from '../lib/storage.js';
 import { Segmented } from './Controls.jsx';
+import { SegmentedRing } from './ui/SegmentedRing.jsx';
 import { BarcodeIcon, BookmarkIcon, CalendarIcon, ChevronLeft, ChevronRight, CopyIcon, EditIcon, PlusIcon, TrashIcon } from './Icons.jsx';
 import { BarcodeScannerModal } from './BarcodeScannerModal.jsx';
 import { CopyModal, CustomFoodModal, FoodSearchModal, MacroLine, PortionPicker, RecipeModal, SavePresetModal, TargetsModal } from './FoodModals.jsx';
@@ -50,35 +51,15 @@ const SEX_OPTIONS = [
 /* ------------------------------------------------------------------ */
 
 function CalorieRing({ eaten, target }) {
-  const R = 52;
-  const C = 2 * Math.PI * R;
   const pct = target > 0 ? Math.min(eaten / target, 1) : 0;
   const over = target > 0 && eaten > target;
   return (
-    <div className={`kcal-ring ${over ? 'is-over' : ''}`}>
-      <svg viewBox="0 0 120 120" aria-hidden>
-        <defs>
-          <linearGradient id="kcal-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="rgb(165, 180, 252)" />
-            <stop offset="100%" stopColor="rgb(99, 102, 241)" />
-          </linearGradient>
-        </defs>
-        <circle className="kcal-ring-track" cx="60" cy="60" r={R} />
-        <circle
-          className="kcal-ring-fill"
-          cx="60"
-          cy="60"
-          r={R}
-          strokeDasharray={C}
-          strokeDashoffset={C * (1 - pct)}
-          transform="rotate(-90 60 60)"
-        />
-      </svg>
+    <SegmentedRing value={pct} size={128} stroke={4} className={`kcal-ring ${over ? 'is-over' : ''}`}>
       <div className="kcal-ring-text">
         <strong className="tabular">{fmt(eaten)}</strong>
-        <span>of {fmt(target)} kcal</span>
+        <span className="tabular">of {fmt(target)} kcal</span>
       </div>
-    </div>
+    </SegmentedRing>
   );
 }
 
