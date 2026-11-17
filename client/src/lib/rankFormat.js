@@ -31,3 +31,11 @@ export function targetOptions(target, cls, unit) {
 }
 
 export { plural };
+
+/**
+ * UI colour for a tier: a CSS variable holding a muted, theme-aware ink (see styles.css
+ * --tier-*). The engine's TIERS[].color stays the source of truth for data.
+ */
+export function tierInk(tier) {
+  return tier?.id ? `var(--tier-${tier.id}, ${tier.color})` : undefined;
+}

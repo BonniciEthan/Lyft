@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { TIERS, rankOf } from '../lib/rankingEngine.js';
 import { addDays, formatShortDate, fromKey, todayKey } from '../lib/dates.js';
 import { Segmented } from './Controls.jsx';
+import { tierInk } from '../lib/rankFormat.js';
 
 const RANGES = [
   { value: '1m', label: '1M', days: 30 },
@@ -100,13 +101,13 @@ export function StrengthChart({ history }) {
         >
           <defs>
             <linearGradient id="sr-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="var(--accent-strong)" stopOpacity="0.38" />
-              <stop offset="1" stopColor="var(--accent-strong)" stopOpacity="0" />
+              <stop offset="0" stopColor="var(--accent)" stopOpacity="0.16" />
+              <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
           {floors.map((t) => (
             <g key={t.id}>
-              <line className="chart-floor" x1={PAD.left} x2={W - PAD.right} y1={sy(t.min)} y2={sy(t.min)} style={{ stroke: t.color }} />
+              <line className="chart-floor" x1={PAD.left} x2={W - PAD.right} y1={sy(t.min)} y2={sy(t.min)} style={{ stroke: tierInk(t) }} />
               <text className="chart-axis" x={PAD.left - 6} y={sy(t.min) + 3.5} textAnchor="end">
                 {t.min} {t.short}
               </text>
@@ -130,7 +131,7 @@ export function StrengthChart({ history }) {
             <div className="chart-tip-date tabular">{formatShortDate(hover.date)}</div>
             <div className="chart-tip-score">
               <span className="tabular">{Math.round(hover.score)}</span>
-              <span style={{ color: tip.rank.tier?.color }}>{tip.rank.label}</span>
+              <span style={{ color: tierInk(tip.rank.tier) }}>{tip.rank.label}</span>
             </div>
             <div className="chart-tip-sub">
               {hover.category} · PR on {hover.improved.slice(0, 2).map((i) => i.name).join(', ')}

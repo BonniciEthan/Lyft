@@ -4,12 +4,16 @@ import { RankCrest } from './TierCrest.jsx';
 import { fromKg, toKg } from '../lib/lifterProfileStore.js';
 import { fillFromLast } from '../lib/history.js';
 import { relativeLabel } from '../lib/dates.js';
+import { tierInk } from '../lib/rankFormat.js';
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
 /** Logged weights are stored in kg; these convert to and from what the lifter types. */
 const shown = (kg, unit) => (kg === null || kg === undefined ? null : unit === 'lbs' ? Math.round(fromKg(kg, unit) * 10) / 10 : round2(kg));
 const stored = (value, unit) => (value === null ? null : unit === 'lbs' ? Math.round(toKg(value, unit) * 10000) / 10000 : value);
+
+/** A set counts as logged once it has reps (weight may be 0 / bodyweight). */
+const isLogged = (s) => Number.isFinite(s.reps) && s.reps > 0;
 
 const RIR_STEPS = [null, 0, 1, 2, 3, 4];
 
@@ -18,7 +22,7 @@ function LiveRankPill({ live }) {
     <span
       key={live.tone}
       className={`live-rank tone-${live.tone}`}
-      style={{ '--tier': live.rank.tier?.color || 'var(--text-3)' }}
+      style={{ '--tier': tierInk(live.rank.tier) || 'var(--text-3)' }}
       aria-live="polite"
     >
       <RankCrest rank={live.rank} size={18} />
@@ -52,11 +56,12 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
       else e.sets[i][field] = value;
     });
 
+  const nextIndex = sets.findIndex((s) => !isLogged(s));
   const canFill = last && sets.some((s) => s.weight === null && s.reps === null);
   const fill = () => onEdit(entry.exerciseId, (e) => fillFromLast(e, last));
 
   return (
-    <article className="glass-panel exercise-card">
+    <article className="surface exercise-card">
       <header className="exercise-head">
         <div className="exercise-title">
           <h3>{entry.name}</h3>
@@ -93,7 +98,11 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
           <span role="columnheader" className="col-spot">Spotted</span>
         </div>
         {sets.map((set, i) => (
-          <div className={`set-row ${set.spotted ? 'is-spotted' : ''}`} role="row" key={i}>
+          <div
+            className={`set-row ${set.spotted ? 'is-spotted' : ''} ${isLogged(set) ? 'is-done' : i === nextIndex ? 'is-next' : ''}`}
+            role="row"
+            key={i}
+          >
             <span className="set-num tabular" role="cell">
               <span className="set-num-word">Set </span>
               {i + 1}

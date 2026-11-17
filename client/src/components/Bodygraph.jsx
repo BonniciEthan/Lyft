@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { MUSCLE_NAME, TIERS } from '../lib/rankingEngine.js';
+import { tierInk } from '../lib/rankFormat.js';
 
 /*
  * Front / back anatomical silhouette. Each figure is drawn on a 160×370 grid centred
@@ -69,7 +70,7 @@ function Figure({ x, label, shapes, detail, muscles, hot, selected, onHover, onS
           <g
             key={id}
             className={cls}
-            style={ranked ? { '--tier': m.rank.tier.color } : undefined}
+            style={ranked ? { '--tier': tierInk(m.rank.tier) } : undefined}
             role="button"
             tabIndex={0}
             aria-label={`${MUSCLE_NAME[id]}: ${m?.rank.label || 'Unranked'}`}
@@ -132,7 +133,7 @@ export function TierLegend() {
     <div className="tier-legend" aria-label="Tier colours">
       {TIERS.map((t) => (
         <div key={t.id} className="tier-legend-item" title={`${t.name} ${t.min}+`}>
-          <span className="tier-swatch" style={{ background: t.color }} />
+          <span className="tier-swatch" style={{ background: tierInk(t) }} />
           <span>{t.short}</span>
         </div>
       ))}

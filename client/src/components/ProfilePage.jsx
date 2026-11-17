@@ -9,7 +9,11 @@ import { Avatar } from './Avatar.jsx';
 import { AttendanceGrid } from './AttendanceGrid.jsx';
 import { RankCrest } from './TierCrest.jsx';
 import { ReminderCard } from './ReminderControls.jsx';
-import { BackupIcon, CameraIcon, CheckIcon, ChevronLeft, CloseIcon, EditIcon, FlameIcon, GearIcon } from './Icons.jsx';
+import { CameraIcon, CheckIcon, ChevronLeft, CloseIcon, EditIcon, FlameIcon } from './Icons.jsx';
+import { tierInk } from '../lib/rankFormat.js';
+import { MetricReadout } from './ui/MetricReadout.jsx';
+import { Segmented } from './Controls.jsx';
+import { THEME_OPTIONS, getTheme, setTheme } from '../lib/theme.js';
 
 function NameEditor({ name, onSave }) {
   const [editing, setEditing] = useState(false);
@@ -82,7 +86,7 @@ function RankSummary({ state, profile, onGoToRank }) {
     );
   }
   return (
-    <button type="button" className="pf-rank" onClick={onGoToRank} style={{ '--tier': rank.tier.color }}>
+    <button type="button" className="pf-rank" onClick={onGoToRank} style={{ '--tier': tierInk(rank.tier) }}>
       <RankCrest rank={rank} size={44} />
       <span className="pf-rank-text">
         <span className="pf-rank-label">{rank.label}</span>
@@ -94,13 +98,37 @@ function RankSummary({ state, profile, onGoToRank }) {
 
 function Stat({ label, value, unit, icon }) {
   return (
-    <div className="glass-panel pf-stat">
-      <span className="metric-label">{label}</span>
-      <span className="pf-stat-value tabular">
-        {icon}
-        {value}
-        {unit && <small>{unit}</small>}
-      </span>
+    <MetricReadout
+      className="pf-stat"
+      label={label}
+      value={
+        <>
+          {icon}
+          {value}
+        </>
+      }
+      unit={unit}
+      size="lg"
+      align="center"
+    />
+  );
+}
+
+const THEME_LABELS = { system: 'System', dark: 'Dark', light: 'Light' };
+
+/** Device-only appearance preference (lib/theme.js); not part of the synced state. */
+function AppearanceRow() {
+  const [theme, setThemeState] = useState(getTheme);
+  return (
+    <div className="pf-appearance">
+      <span className="pf-appearance-label">Appearance</span>
+      <Segmented
+        small
+        label="Appearance"
+        value={theme}
+        onChange={(v) => setThemeState(setTheme(v))}
+        options={THEME_OPTIONS.map((value) => ({ value, label: THEME_LABELS[value] }))}
+      />
     </div>
   );
 }
@@ -209,13 +237,14 @@ export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBa
               ? 'Everything is stored only on this device. Export a backup file now and then so you can restore it on a new phone.'
               : 'Changes are kept on this device and sent to your server only when you press Save. You can also export everything to a file.'}
           </p>
+          <AppearanceRow />
           <div className="pf-data-actions">
             <button type="button" className="btn btn-primary" onClick={onOpenBackup}>
-              <BackupIcon width={18} height={18} /> Import / Export Data
+              Import / Export Data
             </button>
             {!IS_LOCAL && (
               <button type="button" className="btn btn-glass" onClick={onOpenSettings}>
-                <GearIcon width={18} height={18} /> Server settings
+                Server settings
               </button>
             )}
             <button type="button" className="btn btn-glass" onClick={onOpenPrivacy}>
