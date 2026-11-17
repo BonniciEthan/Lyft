@@ -101,8 +101,8 @@ export function StrengthChart({ history }) {
         >
           <defs>
             <linearGradient id="sr-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="var(--accent-strong)" stopOpacity="0.38" />
-              <stop offset="1" stopColor="var(--accent-strong)" stopOpacity="0" />
+              <stop offset="0" stopColor="var(--accent)" stopOpacity="0.16" />
+              <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
           {floors.map((t) => (

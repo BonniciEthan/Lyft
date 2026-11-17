@@ -386,7 +386,7 @@ input[type='date'] {
 
 .app-title {
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
@@ -1162,7 +1162,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .empty-card h2,
 .rest-card h2 {
   font-size: 22px;
-  font-weight: 650;
+  font-weight: 600;
   margin-bottom: 6px;
 }
 
@@ -1246,7 +1246,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .cal-relative {
   font-size: 16px;
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1314,7 +1314,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   padding: 0 18px;
   border-radius: var(--r-pill);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--accent);
   background: rgb(var(--accent-rgb) / 0.14);
   border-color: rgb(var(--accent-rgb) / 0.35);
@@ -1380,7 +1380,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .exercise-head h3 {
   font-size: 16px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
   min-width: 0;
@@ -1416,7 +1416,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   min-width: 20px;
   text-align: center;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .set-table {
@@ -1466,7 +1466,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .set-num {
   text-align: center;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-2);
 }
 
@@ -1507,7 +1507,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 8px;
   font-size: 15px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .today-dot {
@@ -1549,8 +1549,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 15px;
   font-weight: 600;
   color: inherit;
-  background: rgb(var(--accent-rgb) / 0.13);
-  border: 1px solid rgb(var(--accent-rgb) / 0.3);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   box-shadow: var(--specular);
   -webkit-appearance: none;
   appearance: none;
@@ -1599,7 +1599,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   flex: none;
   text-align: center;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-3);
 }
 
@@ -1720,7 +1720,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .progress-meta span:first-child {
   color: var(--text);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .field.compact .glass-input {
@@ -1744,18 +1744,18 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rank-label {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .rank-score {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -1786,7 +1786,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .profile-title {
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   flex: none;
 }
 
@@ -1872,7 +1872,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .rank-setup h2 {
   font-size: 19px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rank-setup p {
@@ -1982,7 +1982,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .bodygraph-hint strong {
   color: var(--text);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .tier-legend {
@@ -2003,7 +2003,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-3);
 }
 
@@ -2066,13 +2066,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .rank-hero-tier {
   font-size: 26px;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .rank-hero-score {
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rank-hero-count {
@@ -2142,12 +2142,12 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .rank-row-score {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .rank-row-label {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
   color: var(--text-3);
 }
@@ -2226,7 +2226,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .target-title strong {
   color: var(--tier);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .target-body {
@@ -2239,7 +2239,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .target-set {
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .target-delta {
@@ -2326,7 +2326,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 8px;
   align-items: baseline;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .chart-tip-sub {
@@ -2342,7 +2342,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   padding: 3px 10px;
   border-radius: var(--r-pill);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--amber);
@@ -2521,7 +2521,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .live-rank.tone-rankup {
   color: var(--text);
-  font-weight: 700;
+  font-weight: 600;
   background: color-mix(in srgb, var(--tier) 18%, var(--surface-2));
   border-color: var(--tier);
   box-shadow: none;
@@ -2711,7 +2711,7 @@ strong.m-f {
   padding: 0 8px;
   border-radius: var(--r-pill);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-2);
   background: rgb(var(--ink-rgb) / 0.06);
   border: 1px solid var(--rim-soft);
@@ -2790,7 +2790,7 @@ strong.m-f {
 
 .kcal-ring-text strong {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
@@ -2812,7 +2812,7 @@ strong.m-f {
 
 .kcal-remaining strong {
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
@@ -2890,7 +2890,7 @@ strong.m-f {
 
 .food-setup h2 {
   font-size: 19px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .food-setup p {
@@ -2955,7 +2955,7 @@ strong.m-f {
 
 .meal-title h3 {
   font-size: 16px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .meal-sub {
@@ -2968,7 +2968,7 @@ strong.m-f {
 }
 
 .meal-sub strong {
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -3039,13 +3039,13 @@ strong.m-f {
 
 .entry-qty {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text);
 }
 
 .entry-kcal {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   padding-right: 2px;
 }
 
@@ -3177,7 +3177,7 @@ strong.m-f {
   flex: none;
   padding-right: 12px;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .food-row-kcal small {
@@ -3218,7 +3218,7 @@ strong.m-f {
 
 .portion-head h3 {
   font-size: 18px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -3241,7 +3241,7 @@ strong.m-f {
 
 .portion-macros strong {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .portion-kcal strong {
@@ -3276,7 +3276,7 @@ strong.m-f {
 
 .portion-input {
   font-size: 20px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .portion-count {
@@ -3302,7 +3302,7 @@ strong.m-f {
   padding: 0 10px;
   border-radius: var(--r-pill);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--accent);
   background: rgb(var(--accent-rgb) / 0.14);
   border: 1px solid rgb(var(--accent-rgb) / 0.3);
@@ -3548,7 +3548,7 @@ strong.m-f {
 
 .backup-last {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .backup-last.is-never {
@@ -3693,7 +3693,7 @@ strong.m-f {
   border-radius: 50%;
   background: var(--surface-3);
   color: var(--text);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.42em;
   letter-spacing: 0;
   user-select: none;
@@ -3850,7 +3850,7 @@ strong.m-f {
 .pf-name {
   min-width: 0;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
@@ -3914,7 +3914,7 @@ strong.m-f {
 
 .pf-rank-label {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--tier, var(--text));
 }
@@ -3955,7 +3955,7 @@ strong.m-f {
   align-items: baseline;
   gap: 3px;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
@@ -4145,7 +4145,7 @@ strong.m-f {
   background: rgb(var(--ink-rgb) / 0.04);
   color: var(--text-3);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -4202,7 +4202,7 @@ strong.m-f {
   background: rgb(var(--accent-rgb) / 0.18);
   color: rgb(var(--accent-rgb));
   font: inherit;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -4312,7 +4312,7 @@ strong.m-f {
   grid-column: 2;
   grid-row: 1 / span 2;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: rgb(var(--accent-rgb));
   white-space: nowrap;
 }
@@ -4387,7 +4387,7 @@ strong.m-f {
 
 .water-title {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -4465,7 +4465,7 @@ strong.m-f {
 
 .goal-name {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4481,7 +4481,7 @@ strong.m-f {
   background: rgb(var(--positive-rgb) / 0.16);
   color: var(--emerald);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   flex: none;
 }
 
@@ -4552,7 +4552,7 @@ strong.m-f {
   display: grid;
   place-items: center;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--on-accent);
   background: var(--accent);
   border: 1px solid rgb(var(--accent-rgb) / 0.4);
@@ -4750,7 +4750,7 @@ strong.m-f {
   min-width: 52px;
   text-align: center;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .custom-day-form {
@@ -4876,8 +4876,7 @@ strong.m-f {
 .tier-legend,
 .calc-result,
 .pf-rank,
-.attendance-readout,
-.routine-list {
+.attendance-readout {
   background: var(--surface-2);
   border: 0;
 }
@@ -5538,5 +5537,30 @@ strong.m-f {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* Rank-up: one short specular sweep across the new crest, no burst. */
+.rankup-stage {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.rankup-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+
+.rankup-hero.is-revealed .rankup-stage::after {
+  animation: crest-sheen 600ms var(--ease) 180ms 1 both;
+}
+
+@keyframes crest-sheen {
+  to {
+    transform: translateX(120%);
   }
 }
