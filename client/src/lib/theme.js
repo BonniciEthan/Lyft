@@ -7,7 +7,7 @@
 export const THEME_KEY = 'lyft_theme_v1';
 export const THEME_OPTIONS = ['system', 'dark', 'light'];
 
-const THEME_COLOR = { dark: '#0B0D0C', light: '#F4F3EF' };
+const THEME_COLOR = { dark: '#0B0D0C', light: '#ECEAE3' };
 
 const safeStorage = () => {
   try {

@@ -40,23 +40,23 @@
 
   /* Surfaces */
   --bg: #0b0d0c;
-  --surface-1: #121514;
-  --surface-2: #181c1a;
-  --surface-3: #1f2421;
-  --hairline: rgb(var(--ink-rgb) / 0.07);
-  --hairline-strong: rgb(var(--ink-rgb) / 0.12);
+  --surface-1: #151a17;
+  --surface-2: #1f2621;
+  --surface-3: #29322c;
+  --hairline: rgb(var(--ink-rgb) / 0.12);
+  --hairline-strong: rgb(var(--ink-rgb) / 0.2);
 
   /* Ink */
   --text: #edefec;
-  --text-2: #a3a9a4;
-  /* ≥4.5:1 (WCAG AA) on --bg and --surface-2. */
-  --text-3: #868d88;
+  --text-2: #c2c9c3;
+  /* ≥4.5:1 (WCAG AA) on --bg and on --surface-3. */
+  --text-3: #a0a8a2;
 
   /* Accent (1%) and semantic tones */
   --accent: #a9c79a;
   --accent-strong: #bcd6ae;
   --on-accent: #0b0d0c;
-  --accent-wash: rgb(var(--accent-rgb) / 0.12);
+  --accent-wash: rgb(var(--accent-rgb) / 0.16);
   --positive: #8fbf9a;
   --warning: #d9b36a;
   --danger: #e0786b;
@@ -66,7 +66,7 @@
 
   /* Glass: floating surfaces only (dock, top bar, sheets, HUDs). */
   --glass-bg: rgb(var(--panel-rgb) / 0.62);
-  --glass-edge: rgb(var(--ink-rgb) / 0.12);
+  --glass-edge: rgb(var(--ink-rgb) / 0.18);
   --glass-spec: inset 0 1px 0 0 rgb(var(--ink-rgb) / 0.1);
   --glass-blur: blur(24px) saturate(140%);
   --glass-drop: 0 18px 40px -16px rgb(var(--shade-rgb) / 0.7);
@@ -137,25 +137,25 @@
   --bg-rgb: 244 243 239;
   --panel-rgb: 255 255 255;
   --scrim-rgb: 30 30 26;
-  --accent-rgb: 79 122 67;
+  --accent-rgb: 68 109 58;
   --positive-rgb: 61 125 82;
   --warning-rgb: 158 112 30;
   --danger-rgb: 181 64 52;
   --macro-c-rgb: 74 105 128;
 
-  --bg: #f4f3ef;
+  --bg: #eceae3;
   --surface-1: #ffffff;
-  --surface-2: #ecebe6;
-  --surface-3: #e2e1db;
-  --hairline: rgb(var(--ink-rgb) / 0.08);
-  --hairline-strong: rgb(var(--ink-rgb) / 0.14);
+  --surface-2: #e4e3dc;
+  --surface-3: #d8d7cf;
+  --hairline: rgb(var(--ink-rgb) / 0.13);
+  --hairline-strong: rgb(var(--ink-rgb) / 0.22);
 
   --text: #121413;
-  --text-2: #4d534f;
-  --text-3: #636966;
+  --text-2: #3b413d;
+  --text-3: #545a56;
 
-  --accent: #4f7a43;
-  --accent-strong: #3f6535;
+  --accent: #446d3a;
+  --accent-strong: #385c30;
   --on-accent: #ffffff;
   --accent-wash: rgb(var(--accent-rgb) / 0.1);
   --positive: #3d7d52;
@@ -166,7 +166,7 @@
   --macro-f: #946b32;
 
   --glass-bg: rgb(255 255 255 / 0.7);
-  --glass-edge: rgb(var(--ink-rgb) / 0.08);
+  --glass-edge: rgb(var(--ink-rgb) / 0.14);
   --glass-spec: inset 0 1px 0 0 rgb(255 255 255 / 0.9);
   --glass-drop: 0 16px 36px -18px rgb(var(--shade-rgb) / 0.28);
 
@@ -5563,4 +5563,148 @@ strong.m-f {
   to {
     transform: translateX(120%);
   }
+}
+
+/* =====================================================================
+   1.5.1: stronger edges and a hint of colour
+   ===================================================================== */
+
+/* Ambient: a slightly stronger moss wash at the top, plus a faint warm one low down,
+   so the ground is never flat grey. Still a still, two-stop wash, not a mesh. */
+.ambient {
+  background:
+    radial-gradient(120% 60% at 50% -14%, rgb(var(--accent-rgb) / 0.13) 0%, transparent 64%),
+    radial-gradient(90% 50% at 100% 110%, rgb(var(--warning-rgb) / 0.05) 0%, transparent 60%),
+    var(--bg);
+}
+
+:root[data-theme='light'] .ambient {
+  background:
+    radial-gradient(120% 55% at 50% -14%, rgb(var(--accent-rgb) / 0.12) 0%, transparent 64%),
+    var(--bg);
+}
+
+/* Cards read as distinct sections: a visible edge and a little more air between them. */
+.surface,
+.glass-panel {
+  border-color: var(--hairline-strong);
+}
+
+.card,
+.exercise-list,
+.meal-list {
+  margin-bottom: 16px;
+}
+
+.exercise-list,
+.meal-list {
+  gap: 16px;
+}
+
+:root[data-theme='light'] .surface,
+:root[data-theme='light'] .glass-panel {
+  box-shadow: 0 1px 2px rgb(var(--shade-rgb) / 0.06);
+}
+
+/* Card headings carry a short accent key so each section is easy to find while scrolling. */
+.card-head h2::before,
+.meal-title h3::before,
+.exercise-head h3::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+  vertical-align: -0.08em;
+}
+
+/* Secondary controls: visible outlines in both themes. */
+.btn-glass,
+.glass-btn,
+.pill-btn,
+.step-btn,
+.mini-btn,
+.glass-input,
+.glass-select,
+.segmented,
+.rir-btn,
+.chip {
+  border-color: var(--hairline-strong);
+}
+
+.step-btn {
+  color: var(--text);
+}
+
+.step-btn:disabled {
+  opacity: 0.35;
+}
+
+/* Selection states use the accent wash, so the active choice is obvious at a glance. */
+.segmented-pill {
+  background: var(--accent-wash);
+  border-color: rgb(var(--accent-rgb) / 0.45);
+  box-shadow: none;
+}
+
+.segmented button.is-active {
+  color: var(--accent);
+}
+
+:root[data-theme='light'] .segmented button.is-active {
+  color: var(--accent-strong);
+}
+
+.nav-pill {
+  background: var(--accent-wash);
+}
+
+.nav-tab {
+  color: var(--text-2);
+}
+
+/* Floating HUDs get a fine accent top edge. */
+.food-summary.glass-panel,
+.calendar-bar.glass-panel {
+  border-top-color: rgb(var(--accent-rgb) / 0.4);
+}
+
+/* Logged values and key readouts pick up the accent. */
+.kcal-remaining strong {
+  color: var(--accent);
+}
+
+.kcal-remaining strong.danger-text {
+  color: var(--danger);
+}
+
+.pf-stat .readout-value {
+  color: var(--text);
+}
+
+.set-row.is-done .num-display {
+  color: var(--text);
+}
+
+/* Section dividers inside cards: full-strength hairlines. */
+.set-row,
+.schedule-row,
+.routine-row,
+.rank-row,
+.entry-row,
+.food-row,
+.goal-row,
+.rankup-row {
+  border-color: var(--hairline);
+}
+
+.pf-stats,
+.macro-bars,
+.entry-list,
+.modal-foot,
+.pf-appearance,
+.topbar {
+  border-color: var(--hairline-strong);
 }
