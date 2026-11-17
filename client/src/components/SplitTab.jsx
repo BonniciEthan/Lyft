@@ -1,16 +1,74 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WEEKDAYS, todayKey, weekdayName } from '../lib/dates.js';
 import { uid } from '../lib/storage.js';
-import { Segmented } from './Controls.jsx';
 import { ArrowDown, ArrowUp, PlusIcon, SearchIcon, TrashIcon } from './Icons.jsx';
 import { Modal } from './Modal.jsx';
 import { MUSCLES, MUSCLE_NAME, classifyExercise, searchLibrary } from '../lib/rankingEngine.js';
 import { allExercises, mergeExercises } from '../lib/history.js';
+import { MAX_DAY_NAME, MAX_SETS, MIN_SETS, badgeClass, clampSets, dayOptions, resolveDayName } from '../lib/splitDays.js';
 
-const SET_OPTIONS = [
-  { value: 2, label: '2 sets' },
-  { value: 3, label: '3 sets' },
-];
+const OTHER = '__other__';
+
+/** [−] 3 sets [+] counter, the only place set counts are changed. */
+function SetCounter({ value, onChange, label }) {
+  const v = clampSets(value);
+  return (
+    <div className="set-counter" role="group" aria-label={label}>
+      <button type="button" className="step-btn" onClick={() => onChange(v - 1)} disabled={v <= MIN_SETS} aria-label="Fewer sets">
+        <span aria-hidden>−</span>
+      </button>
+      <span className="set-counter-value tabular" aria-live="polite">
+        {v} {v === 1 ? 'set' : 'sets'}
+      </span>
+      <button type="button" className="step-btn" onClick={() => onChange(v + 1)} disabled={v >= MAX_SETS} aria-label="More sets">
+        <span aria-hidden>+</span>
+      </button>
+    </div>
+  );
+}
+
+/** Lets the lifter type their own day name ("Other"). */
+function CustomDayModal({ day, workouts, onClose, onSave }) {
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    setName('');
+    setError('');
+  }, [day]);
+  const submit = (e) => {
+    e.preventDefault();
+    const res = resolveDayName(name, workouts);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    onSave(day, res.name);
+  };
+  return (
+    <Modal open={!!day} onClose={onClose} title={`Custom day for ${day || ''}`}>
+      <form className="custom-day-form" onSubmit={submit}>
+        <input
+          className="glass-input"
+          autoFocus
+          placeholder="e.g. Full Body, Cardio, Upper"
+          value={name}
+          maxLength={MAX_DAY_NAME}
+          enterKeyHint="done"
+          aria-label="Day name"
+          onChange={(e) => {
+            setName(e.target.value);
+            setError('');
+          }}
+        />
+        {error && <span className="field-error">{error}</span>}
+        <p className="field-hint">This becomes a routine you can add exercises to below.</p>
+        <button type="submit" className="btn btn-primary" disabled={!name.trim()}>
+          Save
+        </button>
+      </form>
+    </Modal>
+  );
+}
 
 /** Searchable built-in exercise library with muscle filters. */
 function LibraryModal({ open, onClose, category, existing, onAdd }) {
@@ -132,7 +190,6 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
     if (trimmed !== exercise.name) onRename(trimmed);
   };
 
-  const setsValue = exercise.defaultSets === 2 ? 2 : 3;
   const auto = classifyExercise(exercise.name, category);
   const autoLabel = auto.excluded ? 'not ranked' : MUSCLE_NAME[auto.muscle] || 'none found';
   const needsMuscle = !auto.excluded && !auto.muscle && !exercise.muscle;
@@ -157,7 +214,7 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
         />
       </div>
       <div className="routine-row-actions">
-        <Segmented small options={SET_OPTIONS} value={setsValue} onChange={onSets} label="Default sets" />
+        <SetCounter value={exercise.defaultSets} onChange={onSets} label={`Sets for ${exercise.name}`} />
         <div className="routine-buttons">
           <button type="button" className="icon-btn glass-btn" onClick={() => onMove(-1)} disabled={index === 0} aria-label="Move up">
             <ArrowUp width={18} height={18} />
@@ -213,6 +270,7 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   const [categoryError, setCategoryError] = useState('');
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mergeTarget, setMergeTarget] = useState(null);
+  const [customDay, setCustomDay] = useState(null);
 
   useEffect(() => {
     if (!state.workouts[active]) setActive(Object.keys(state.workouts)[0] || '');
@@ -221,10 +279,24 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   const exercises = state.workouts[active] || [];
   const todayName = weekdayName(todayKey());
 
-  const setDay = (day, value) =>
+  const options = useMemo(() => dayOptions(state.workouts), [state.workouts]);
+
+  /** Assigns a day; a preset or custom name that isn't a routine yet becomes an empty one. */
+  const assignDay = (day, value) => {
+    if (value === OTHER) {
+      setCustomDay(day);
+      return;
+    }
+    const created = value !== 'Rest' && !state.workouts[value];
     update((d) => {
+      if (value !== 'Rest' && !d.workouts[value]) d.workouts[value] = [];
       d.split[day] = value;
     });
+    if (created) {
+      setActive(value);
+      toast?.(`Added a ${value} routine. Add its exercises under Routines.`);
+    }
+  };
 
   const pushExercise = (name) => {
     update((d) => {
@@ -284,7 +356,7 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   const setSets = (id, sets) =>
     update((d) => {
       const ex = d.workouts[active].find((x) => x.id === id);
-      if (ex) ex.defaultSets = sets;
+      if (ex) ex.defaultSets = clampSets(sets);
     });
 
   const move = (index, delta) =>
@@ -369,19 +441,20 @@ export function SplitTab({ state, update, askConfirm, toast }) {
                   {day}
                   {day === todayName && <span className="today-dot" aria-label="today" />}
                 </span>
-                <div className={`glass-select-wrap badge-${value.toLowerCase()}`}>
+                <div className={`glass-select-wrap ${badgeClass(value)}`}>
                   <select
                     className="glass-select"
                     value={value}
                     aria-label={`${day} workout`}
-                    onChange={(e) => setDay(day, e.target.value)}
+                    onChange={(e) => assignDay(day, e.target.value)}
                   >
-                    {categories.map((c) => (
+                    {options.map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
                     ))}
                     <option value="Rest">Rest</option>
+                    <option value={OTHER}>Other…</option>
                   </select>
                 </div>
               </li>
@@ -495,7 +568,7 @@ export function SplitTab({ state, update, askConfirm, toast }) {
                 </div>
               )}
               <div className="add-exercise-row">
-                <Segmented small options={SET_OPTIONS} value={newSets} onChange={setNewSets} label="Default sets for new exercise" />
+                <SetCounter value={newSets} onChange={setNewSets} label="Sets for new exercise" />
                 <button type="submit" className="btn btn-primary" disabled={!newName.trim()}>
                   <PlusIcon width={18} height={18} /> Add Exercise
                 </button>
@@ -521,6 +594,15 @@ export function SplitTab({ state, update, askConfirm, toast }) {
         }}
       />
       <MergeModal target={mergeTarget} candidates={mergeCandidates} onClose={() => setMergeTarget(null)} onMerge={merge} />
+      <CustomDayModal
+        day={customDay}
+        workouts={state.workouts}
+        onClose={() => setCustomDay(null)}
+        onSave={(day, name) => {
+          setCustomDay(null);
+          assignDay(day, name);
+        }}
+      />
     </section>
   );
 }

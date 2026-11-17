@@ -1157,6 +1157,26 @@ input[type='date']::-webkit-calendar-picker-indicator {
   --badge: 148, 163, 184;
 }
 
+.badge-chest {
+  --badge: 244, 114, 182;
+}
+
+.badge-back {
+  --badge: 45, 212, 191;
+}
+
+.badge-arms {
+  --badge: 250, 204, 21;
+}
+
+.badge-abs {
+  --badge: 248, 113, 113;
+}
+
+.badge-shoulders {
+  --badge: 192, 132, 252;
+}
+
 .split-badge[class*='badge-'] {
   background: rgba(var(--badge, 165, 180, 252), 0.16);
   border-color: rgba(var(--badge, 165, 180, 252), 0.35);
@@ -4481,4 +4501,138 @@ strong.m-f {
 
 .switch.is-on .switch-knob {
   transform: translateX(20px);
+}
+
+/* ---------------------------------------------------------------------
+   My Split: set counter and custom day
+   --------------------------------------------------------------------- */
+
+.set-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.set-counter .step-btn {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  font-size: 18px;
+}
+
+.set-counter .step-btn:disabled {
+  opacity: 0.35;
+}
+
+.set-counter-value {
+  min-width: 52px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.custom-day-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------------------------------------------------------------------
+   Progress: set rows. One line on wide screens; on phones each set gets two
+   lines (label, RIR, spotted on top; weight and reps steppers full width below)
+   so the − / + buttons never crowd the numbers.
+   --------------------------------------------------------------------- */
+
+.set-extras {
+  display: contents;
+}
+
+.set-num-word,
+.cell-label {
+  display: none;
+}
+
+@media (max-width: 519px) {
+  .set-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'num extras'
+      'weight reps';
+    gap: 6px 10px;
+    padding: 6px 8px 8px;
+  }
+
+  .set-row .col-weight {
+    grid-area: weight;
+  }
+
+  .set-row .col-reps {
+    grid-area: reps;
+  }
+
+  .set-num {
+    grid-area: num;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .set-num-word {
+    display: inline;
+  }
+
+  .set-extras {
+    grid-area: extras;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+  }
+
+  .set-extras .cell-center {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cell-label {
+    display: inline;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .set-extras .rir-btn {
+    width: 40px;
+    height: 30px;
+  }
+
+  .set-extras .glass-check {
+    width: 32px;
+    height: 32px;
+  }
+
+  .set-row .stepper {
+    gap: 6px;
+  }
+
+  .set-row .step-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .set-row-head {
+    grid-template-areas: 'weight reps';
+    padding: 0 8px 0;
+  }
+
+  .set-row-head .col-num,
+  .set-row-head .col-rir,
+  .set-row-head .col-spot {
+    display: none;
+  }
 }

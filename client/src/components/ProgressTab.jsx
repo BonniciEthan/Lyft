@@ -8,6 +8,7 @@ import { liveRankStatus } from '../lib/liveRank.js';
 import { hasBodyweight, normalizeProfile } from '../lib/lifterProfileStore.js';
 import { RankUpModal } from './RankUpModal.jsx';
 import { lastSessions } from '../lib/history.js';
+import { badgeClass, fitSets } from '../lib/splitDays.js';
 
 function freshEntry(ex) {
   return {
@@ -30,7 +31,7 @@ function buildEntries(template, log, followTemplate) {
   const byId = new Map(log.exercises.map((e) => [e.exerciseId, e]));
   const ordered = template.map((ex) => {
     const existing = byId.get(ex.id);
-    return existing ? { ...existing, name: ex.name } : freshEntry(ex);
+    return existing ? { ...existing, name: ex.name, sets: fitSets(existing.sets, ex.defaultSets) } : freshEntry(ex);
   });
   const templateIds = new Set(template.map((ex) => ex.id));
   return [...ordered, ...log.exercises.filter((e) => !templateIds.has(e.exerciseId))];
@@ -152,7 +153,10 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
           dayLog.exercises.push(entry);
         }
         const tpl = draft.workouts[dayLog.category]?.find((ex) => ex.id === exerciseId);
-        if (tpl && date >= todayKey()) entry.name = tpl.name;
+        if (tpl && date >= todayKey()) {
+          entry.name = tpl.name;
+          entry.sets = fitSets(entry.sets, tpl.defaultSets);
+        }
         mutate(entry);
       }, opts);
     },
@@ -195,7 +199,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
         <div className="cal-center">
           <div className="cal-title">
             <span className="cal-relative">{relativeLabel(date, today)}</span>
-            <span className={`split-badge badge-${badge.toLowerCase()}`}>{badge}</span>
+            <span className={`split-badge ${badgeClass(badge)}`}>{badge}</span>
           </div>
           <div className="cal-date tabular">{formatDate(date)}</div>
         </div>

@@ -52,24 +52,6 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
       else e.sets[i][field] = value;
     });
 
-  const addSet = () =>
-    onEdit(entry.exerciseId, (e) => {
-      const prev = e.sets[e.sets.length - 1];
-      e.sets.push({ weight: prev ? prev.weight : null, reps: prev ? prev.reps : null, spotted: false });
-    });
-
-  const removeSet = () => {
-    const victim = sets[sets.length - 1];
-    const hadData = victim && (victim.weight !== null || victim.reps !== null);
-    onEdit(
-      entry.exerciseId,
-      (e) => {
-        if (e.sets.length > 1) e.sets.pop();
-      },
-      hadData ? { undo: `Removed set ${sets.length} of ${entry.name}` } : undefined
-    );
-  };
-
   const canFill = last && sets.some((s) => s.weight === null && s.reps === null);
   const fill = () => onEdit(entry.exerciseId, (e) => fillFromLast(e, last));
 
@@ -79,17 +61,6 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
         <div className="exercise-title">
           <h3>{entry.name}</h3>
           {live && <LiveRankPill live={live} />}
-        </div>
-        <div className="set-count" aria-label="Number of sets">
-          <button type="button" className="mini-btn" onClick={removeSet} disabled={sets.length <= 1} aria-label="Remove set">
-            − Set
-          </button>
-          <span className="set-count-value tabular" aria-live="polite">
-            {sets.length}
-          </span>
-          <button type="button" className="mini-btn" onClick={addSet} aria-label="Add set">
-            + Set
-          </button>
         </div>
       </header>
 
@@ -113,20 +84,21 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
 
       <div className="set-table" role="table" aria-label={`${entry.name} sets`}>
         <div className="set-row set-row-head" role="row">
-          <span role="columnheader">Set</span>
-          <span role="columnheader">Weight ({unit})</span>
-          <span role="columnheader">Reps</span>
-          <span role="columnheader" title="Reps in reserve: how many more you could have done">
+          <span role="columnheader" className="col-num">Set</span>
+          <span role="columnheader" className="col-weight">Weight ({unit})</span>
+          <span role="columnheader" className="col-reps">Reps</span>
+          <span role="columnheader" className="col-rir" title="Reps in reserve: how many more you could have done">
             RIR
           </span>
-          <span role="columnheader">Spotted</span>
+          <span role="columnheader" className="col-spot">Spotted</span>
         </div>
         {sets.map((set, i) => (
           <div className={`set-row ${set.spotted ? 'is-spotted' : ''}`} role="row" key={i}>
             <span className="set-num tabular" role="cell">
+              <span className="set-num-word">Set </span>
               {i + 1}
             </span>
-            <div role="cell">
+            <div role="cell" className="col-weight">
               <Stepper
                 value={shown(set.weight, unit)}
                 decimal
@@ -135,18 +107,26 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
                 onChange={(v) => setField(i, 'weight', stored(v, unit))}
               />
             </div>
-            <div role="cell">
+            <div role="cell" className="col-reps">
               <Stepper value={set.reps} step={1} label={`Set ${i + 1} reps`} onChange={(v) => setField(i, 'reps', v)} />
             </div>
-            <div role="cell" className="cell-center">
-              <RirCell value={set.rir} label={`Set ${i + 1} RIR`} onChange={(v) => setField(i, 'rir', v)} />
-            </div>
-            <div role="cell" className="cell-center">
-              <GlassCheckbox
-                checked={set.spotted}
-                label={`Set ${i + 1} spotted`}
-                onChange={(v) => setField(i, 'spotted', v)}
-              />
+            <div className="set-extras">
+              <div role="cell" className="cell-center col-rir">
+                <span className="cell-label" aria-hidden>
+                  RIR
+                </span>
+                <RirCell value={set.rir} label={`Set ${i + 1} RIR`} onChange={(v) => setField(i, 'rir', v)} />
+              </div>
+              <div role="cell" className="cell-center col-spot">
+                <span className="cell-label" aria-hidden>
+                  Spotted
+                </span>
+                <GlassCheckbox
+                  checked={set.spotted}
+                  label={`Set ${i + 1} spotted`}
+                  onChange={(v) => setField(i, 'spotted', v)}
+                />
+              </div>
             </div>
           </div>
         ))}
