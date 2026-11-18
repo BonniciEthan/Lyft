@@ -29,20 +29,6 @@ export function lastSessions(logs, beforeDate) {
   return out;
 }
 
-/** Copy last session's numbers into the still-empty sets of `entry` (mutates it). */
-export function fillFromLast(entry, last) {
-  if (!entry || !last?.sets?.length) return 0;
-  let filled = 0;
-  entry.sets.forEach((set, i) => {
-    const prev = last.sets[Math.min(i, last.sets.length - 1)];
-    if (!isBlank(set)) return;
-    set.weight = prev.weight;
-    set.reps = prev.reps;
-    filled += 1;
-  });
-  return filled;
-}
-
 /**
  * Every exercise the app knows about: routine exercises first, then ones that only
  * survive in the logs (deleted from their routine). [{ id, name, category, inRoutine, sessions }]

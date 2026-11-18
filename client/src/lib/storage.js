@@ -1,5 +1,6 @@
 import { createSeedState } from '../seed.js';
 import { WEEKDAYS } from './dates.js';
+import { MAX_ROTATION, mondayOf } from './splitDays.js';
 
 import { IS_LOCAL } from '../edition.js';
 import { normalizeProfile } from './lifterProfileStore.js';
@@ -44,6 +45,20 @@ export function normalizeState(raw) {
     split[day] = typeof v === 'string' && (v === 'Rest' || workouts[v]) ? v : 'Rest';
   }
 
+  // Weekdays that alternate routines every 2–3 weeks (see splitDays.js).
+  const validDay = (v) => typeof v === 'string' && (v === 'Rest' || !!workouts[v]);
+  const rotations = {};
+  if (isObj(raw.rotations)) {
+    for (const day of WEEKDAYS) {
+      const r = raw.rotations[day];
+      if (!isObj(r) || !Array.isArray(r.picks) || r.picks.length < 2 || r.picks.length > MAX_ROTATION) continue;
+      if (typeof r.anchor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.anchor)) continue;
+      const picks = r.picks.map((p) => (validDay(p) ? p : 'Rest'));
+      rotations[day] = { picks, anchor: mondayOf(r.anchor) };
+      split[day] = picks[0];
+    }
+  }
+
   const logs = {};
   if (isObj(raw.logs)) {
     for (const [date, log] of Object.entries(raw.logs)) {
@@ -83,6 +98,7 @@ export function normalizeState(raw) {
   return {
     lastSynced: typeof raw.lastSynced === 'string' ? raw.lastSynced : null,
     split,
+    rotations,
     workouts,
     logs,
     goals,

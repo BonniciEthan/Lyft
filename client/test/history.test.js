@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allExercises, bestWeights, fillFromLast, goalProgress, lastSessions, mergeExercises } from '../src/lib/history.js';
+import { allExercises, bestWeights, goalProgress, lastSessions, mergeExercises } from '../src/lib/history.js';
 import { classifyExercise, computeRanks, searchLibrary, EXERCISE_LIBRARY } from '../src/lib/rankingEngine.js';
 import { normalizeState } from '../src/lib/storage.js';
 import {
@@ -44,13 +44,6 @@ test('lastSessions finds the latest earlier session that has reps', () => {
   assert.deepEqual(last.get('a').sets.map((x) => [x.weight, x.reps]), [[70, 5]]);
   assert.equal(lastSessions(s.logs, '2026-11-03').get('b').date, '2026-11-01');
   assert.equal(lastSessions(s.logs, '2026-11-01').size, 0);
-});
-
-test('fillFromLast only fills empty sets', () => {
-  const entry = { sets: [set(80, 3), set(null, null), set(null, null)] };
-  const filled = fillFromLast(entry, { sets: [set(60, 10), set(60, 8)] });
-  assert.equal(filled, 2);
-  assert.deepEqual(entry.sets.map((x) => [x.weight, x.reps]), [[80, 3], [60, 8], [60, 8]]);
 });
 
 test('mergeExercises moves history, joins same-day sets and drops the old routine entry', () => {

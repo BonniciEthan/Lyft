@@ -260,6 +260,7 @@ app.post('/api/sync', (req, res) => {
   const toStore = {
     lastSynced,
     split: incoming.split,
+    ...(isPlainObject(incoming.rotations) ? { rotations: incoming.rotations } : {}),
     workouts: incoming.workouts,
     logs: incoming.logs,
     goals: incoming.goals,

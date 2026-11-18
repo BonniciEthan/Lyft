@@ -8,7 +8,7 @@ import { liveRankStatus } from '../lib/liveRank.js';
 import { hasBodyweight, normalizeProfile } from '../lib/lifterProfileStore.js';
 import { RankUpModal } from './RankUpModal.jsx';
 import { lastSessions } from '../lib/history.js';
-import { badgeClass, fitSets } from '../lib/splitDays.js';
+import { badgeClass, fitSets, scheduledFor } from '../lib/splitDays.js';
 
 function freshEntry(ex) {
   return {
@@ -46,7 +46,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
 
   const log = state.logs[date];
   const weekday = weekdayName(date);
-  const scheduled = state.split[weekday] || 'Rest';
+  const scheduled = scheduledFor(state.split, state.rotations, date);
   const category = log ? log.category : scheduled;
   const template = state.workouts[category];
   const isRest = !log && (category === 'Rest' || !template);
