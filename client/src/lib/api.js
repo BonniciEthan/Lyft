@@ -33,8 +33,8 @@ async function request(path, { method = 'GET', body, timeout = 10000, baseUrl } 
 }
 
 export function pushState(state) {
-  const { lastSynced, split, workouts, logs, goals, profile, nutrition } = state;
-  const body = { lastSynced, split, workouts, logs, goals, profile, ...(nutrition ? { nutrition } : {}) };
+  const { lastSynced, split, rotations, workouts, logs, goals, profile, nutrition } = state;
+  const body = { lastSynced, split, rotations: rotations || {}, workouts, logs, goals, profile, ...(nutrition ? { nutrition } : {}) };
   return request('/api/sync', { method: 'POST', body, timeout: 20000 });
 }
 

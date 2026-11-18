@@ -7,7 +7,7 @@ const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 const longDate = (key) => fromKey(key).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
 /** 53-week GitHub-style attendance heatmap: one accent colour for "trained", nothing else. */
-export function AttendanceGrid({ logs, split, today }) {
+export function AttendanceGrid({ logs, split, rotations, today }) {
   const grid = useMemo(() => buildAttendanceGrid(logs, today), [logs, today]);
   const [selected, setSelected] = useState(today);
   const scrollRef = useRef(null);
@@ -34,7 +34,7 @@ export function AttendanceGrid({ logs, split, today }) {
     <div className="attendance">
       <div className={`attendance-readout ${cell?.active ? 'is-active' : ''}`} aria-live="polite">
         <span className="attendance-readout-date">{cell ? longDate(cell.date) : ''}</span>
-        <span className="attendance-readout-status">{cell ? (cell.future ? 'Upcoming' : describeDay(cell, split)) : ''}</span>
+        <span className="attendance-readout-status">{cell ? (cell.future ? 'Upcoming' : describeDay(cell, split, rotations)) : ''}</span>
       </div>
 
       <div className="attendance-body">

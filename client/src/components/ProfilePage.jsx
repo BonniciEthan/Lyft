@@ -136,7 +136,7 @@ function AppearanceRow() {
 export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBackup, onOpenPrivacy, onOpenSettings, onShowInstall }) {
   const profile = useMemo(() => normalizeProfile(state.profile), [state.profile]);
   const today = todayKey();
-  const streak = useMemo(() => calculateCurrentStreak(state.logs, state.split, today), [state.logs, state.split, today]);
+  const streak = useMemo(() => calculateCurrentStreak(state.logs, state.split, today, state.rotations), [state.logs, state.split, today, state.rotations]);
   const totals = useMemo(() => workoutTotals(state.logs), [state.logs]);
   const fileRef = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -223,7 +223,7 @@ export function ProfilePage({ state, update, toast, onBack, onGoToRank, onOpenBa
           <div className="card-head">
             <h2>Gym attendance</h2>
           </div>
-          <AttendanceGrid logs={state.logs} split={state.split} today={today} />
+          <AttendanceGrid logs={state.logs} split={state.split} rotations={state.rotations} today={today} />
         </section>
 
         <ReminderCard toast={toast} onShowInstall={onShowInstall} />

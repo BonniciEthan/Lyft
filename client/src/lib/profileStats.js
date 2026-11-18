@@ -5,7 +5,8 @@
  * Pure module (no React, no browser globals) so it can be unit tested with node:test.
  */
 
-import { addDays, fromKey, weekdayName } from './dates.js';
+import { addDays, fromKey } from './dates.js';
+import { scheduledFor } from './splitDays.js';
 
 export const STREAK_CAP_DAYS = 3650;
 export const GRID_WEEKS = 53;
@@ -30,7 +31,7 @@ export function loggedSetCount(log) {
 
 export const isWorkoutLogged = (logs, dateStr) => loggedSetCount(logs?.[dateStr]) > 0;
 
-export const isScheduledRestDay = (split, dateStr) => split?.[weekdayName(dateStr)] === 'Rest';
+export const isScheduledRestDay = (split, dateStr, rotations) => scheduledFor(split, rotations, dateStr) === 'Rest';
 
 /**
  * Consecutive days, ending today, of training-or-scheduled-rest.
@@ -41,9 +42,9 @@ export const isScheduledRestDay = (split, dateStr) => split?.[weekdayName(dateSt
  *   a single old workout into a years-long streak).
  * - A missed training day ends it. No workout at all means 0.
  */
-export function calculateCurrentStreak(logs, split, todayStr) {
+export function calculateCurrentStreak(logs, split, todayStr, rotations) {
   let cursor = todayStr;
-  if (!isWorkoutLogged(logs, todayStr) && !isScheduledRestDay(split, todayStr)) cursor = addDays(todayStr, -1);
+  if (!isWorkoutLogged(logs, todayStr) && !isScheduledRestDay(split, todayStr, rotations)) cursor = addDays(todayStr, -1);
 
   let count = 0;
   let streak = 0; // count as of the oldest workout seen so far
@@ -51,7 +52,7 @@ export function calculateCurrentStreak(logs, split, todayStr) {
     if (isWorkoutLogged(logs, cursor)) {
       count += 1;
       streak = count;
-    } else if (isScheduledRestDay(split, cursor)) {
+    } else if (isScheduledRestDay(split, cursor, rotations)) {
       count += 1;
     } else {
       break;
@@ -124,8 +125,8 @@ export function buildAttendanceGrid(logs, todayStr, weekCount = GRID_WEEKS) {
 }
 
 /** "Pull • 14 sets" / "Scheduled Rest" / "No workout logged". */
-export function describeDay(cell, split) {
+export function describeDay(cell, split, rotations) {
   if (cell.active) return `${cell.category ? `${cell.category} • ` : ''}${cell.sets} set${cell.sets === 1 ? '' : 's'}`;
-  if (isScheduledRestDay(split, cell.date)) return 'Scheduled Rest';
+  if (isScheduledRestDay(split, cell.date, rotations)) return 'Scheduled Rest';
   return 'No workout logged';
 }

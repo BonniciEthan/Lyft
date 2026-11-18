@@ -1,3 +1,5 @@
+import { addDays, daysBetween, fromKey, weekdayName } from './dates.js';
+
 /**
  * Day types for the weekly split. Every training day maps to a routine in
  * `state.workouts`; picking a preset that doesn't exist yet creates an empty routine.
@@ -55,4 +57,101 @@ export function fitSets(sets, target) {
   while (out.length < target) out.push({ weight: null, reps: null, spotted: false });
   while (out.length > target && isEmptySet(out[out.length - 1])) out.pop();
   return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Rotations: a weekday that alternates routines every 2 or 3 weeks     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `state.rotations[day] = { picks, anchor }` for weekdays that rotate.
+ * - picks: 2 or 3 day types (routine names or 'Rest'), one per week of the cycle.
+ * - anchor: the Monday of a week that used picks[0].
+ * Weekdays without an entry repeat `state.split[day]` every week. `split[day]` is kept
+ * equal to picks[0] so older app versions still see a sensible weekly value.
+ */
+export const FREQUENCIES = [
+  { weeks: 1, label: 'Weekly' },
+  { weeks: 2, label: 'Every 2 wks' },
+  { weeks: 3, label: 'Every 3 wks' },
+];
+export const MAX_ROTATION = 3;
+
+/** Monday of the week containing `key` (weeks run Monday to Sunday). */
+export function mondayOf(key) {
+  return addDays(key, -((fromKey(key).getDay() + 6) % 7));
+}
+
+const mod = (n, m) => ((n % m) + m) % m;
+
+/** Which pick of `rotation` applies to the week containing `dateKey`. */
+export function rotationIndex(rotation, dateKey) {
+  const weeks = Math.round(daysBetween(rotation.anchor, mondayOf(dateKey)) / 7);
+  return mod(weeks, rotation.picks.length);
+}
+
+/** Day type scheduled for a date: the weekly value, or this week's pick of a rotation. */
+export function scheduledFor(split, rotations, dateKey) {
+  const day = weekdayName(dateKey);
+  const rot = rotations?.[day];
+  if (rot && Array.isArray(rot.picks) && rot.picks.length > 1) return rot.picks[rotationIndex(rot, dateKey)] || 'Rest';
+  return split?.[day] || 'Rest';
+}
+
+/** How many weeks a weekday's cycle is (1 = every week). */
+export function frequencyOf(rotations, day) {
+  return rotations?.[day]?.picks?.length || 1;
+}
+
+/**
+ * Changes a weekday's frequency (mutates draft state `d`). This week's day type is kept
+ * and becomes Week 1 of the new cycle; existing picks follow in order, new ones are Rest.
+ */
+export function setFrequency(d, day, weeks, todayStr) {
+  if (!d.rotations) d.rotations = {};
+  const current = scheduledFor(d.split, d.rotations, todayStr);
+  const rot = d.rotations[day];
+  let picks = [d.split[day] || 'Rest'];
+  if (rot) {
+    const i = rotationIndex(rot, todayStr);
+    picks = [...rot.picks.slice(i), ...rot.picks.slice(0, i)];
+  }
+  if (weeks <= 1) {
+    delete d.rotations[day];
+    d.split[day] = current;
+    return;
+  }
+  picks = picks.slice(0, weeks);
+  while (picks.length < weeks) picks.push('Rest');
+  d.rotations[day] = { picks, anchor: mondayOf(todayStr) };
+  d.split[day] = picks[0];
+}
+
+/** Sets the day type for one week of a rotation (mutates draft state `d`). */
+export function setRotationPick(d, day, index, value) {
+  const rot = d.rotations?.[day];
+  if (!rot || index < 0 || index >= rot.picks.length) return;
+  rot.picks[index] = value;
+  if (index === 0) d.split[day] = value;
+}
+
+/** Makes `index` the pick for the current week, keeping the order of the cycle. */
+export function setRotationThisWeek(d, day, index, todayStr) {
+  const rot = d.rotations?.[day];
+  if (!rot || index < 0 || index >= rot.picks.length) return;
+  rot.anchor = addDays(mondayOf(todayStr), -7 * index);
+}
+
+/** Replaces a deleted routine with Rest everywhere in the schedule (mutates `d`). */
+export function clearFromSchedule(d, name, weekdays) {
+  for (const day of weekdays) {
+    if (d.split[day] === name) d.split[day] = 'Rest';
+    const rot = d.rotations?.[day];
+    if (rot) rot.picks = rot.picks.map((p) => (p === name ? 'Rest' : p));
+  }
+}
+
+/** Weekdays that use `name` in any week. */
+export function daysUsing(split, rotations, name, weekdays) {
+  return weekdays.filter((day) => split[day] === name || (rotations?.[day]?.picks || []).includes(name));
 }

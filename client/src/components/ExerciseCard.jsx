@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { GlassCheckbox, Stepper } from './Controls.jsx';
 import { RankCrest } from './TierCrest.jsx';
 import { fromKg, toKg } from '../lib/lifterProfileStore.js';
-import { fillFromLast } from '../lib/history.js';
 import { relativeLabel } from '../lib/dates.js';
 import { tierInk } from '../lib/rankFormat.js';
 
@@ -57,8 +56,6 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
     });
 
   const nextIndex = sets.findIndex((s) => !isLogged(s));
-  const canFill = last && sets.some((s) => s.weight === null && s.reps === null);
-  const fill = () => onEdit(entry.exerciseId, (e) => fillFromLast(e, last));
 
   return (
     <article className="surface exercise-card">
@@ -79,11 +76,6 @@ function ExerciseCardImpl({ entry, onEdit, live, unit = 'kg', last, today }) {
               </span>
             ))}
           </span>
-          {canFill && (
-            <button type="button" className="mini-btn last-time-fill" onClick={fill}>
-              Use
-            </button>
-          )}
         </div>
       )}
 

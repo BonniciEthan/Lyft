@@ -5,9 +5,42 @@ import { ArrowDown, ArrowUp, PlusIcon, SearchIcon, TrashIcon } from './Icons.jsx
 import { Modal } from './Modal.jsx';
 import { MUSCLES, MUSCLE_NAME, classifyExercise, searchLibrary } from '../lib/rankingEngine.js';
 import { allExercises, mergeExercises } from '../lib/history.js';
-import { MAX_DAY_NAME, MAX_SETS, MIN_SETS, badgeClass, clampSets, dayOptions, resolveDayName } from '../lib/splitDays.js';
+import {
+  FREQUENCIES,
+  MAX_DAY_NAME,
+  MAX_SETS,
+  MIN_SETS,
+  badgeClass,
+  clampSets,
+  clearFromSchedule,
+  dayOptions,
+  daysUsing,
+  frequencyOf,
+  resolveDayName,
+  rotationIndex,
+  setFrequency,
+  setRotationPick,
+  setRotationThisWeek,
+} from '../lib/splitDays.js';
 
 const OTHER = '__other__';
+
+/** Routine dropdown used for a weekly day and for each week of a rotation. */
+function DaySelect({ value, options, label, onChange }) {
+  return (
+    <div className={`glass-select-wrap ${badgeClass(value)}`}>
+      <select className="glass-select" value={value} aria-label={label} onChange={(e) => onChange(e.target.value)}>
+        {options.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+        <option value="Rest">Rest</option>
+        <option value={OTHER}>Other…</option>
+      </select>
+    </div>
+  );
+}
 
 /** [−] 3 sets [+] counter, the only place set counts are changed. */
 function SetCounter({ value, onChange, label }) {
@@ -277,20 +310,25 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   }, [state.workouts, active]);
 
   const exercises = state.workouts[active] || [];
-  const todayName = weekdayName(todayKey());
+  const today = todayKey();
+  const todayName = weekdayName(today);
+
+  const changeFrequency = (day, weeks) => update((d) => setFrequency(d, day, weeks, today));
+  const makeThisWeek = (day, week) => update((d) => setRotationThisWeek(d, day, week, today));
 
   const options = useMemo(() => dayOptions(state.workouts), [state.workouts]);
 
   /** Assigns a day; a preset or custom name that isn't a routine yet becomes an empty one. */
-  const assignDay = (day, value) => {
+  const assignDay = (day, value, week = null) => {
     if (value === OTHER) {
-      setCustomDay(day);
+      setCustomDay({ day, week });
       return;
     }
     const created = value !== 'Rest' && !state.workouts[value];
     update((d) => {
       if (value !== 'Rest' && !d.workouts[value]) d.workouts[value] = [];
-      d.split[day] = value;
+      if (week === null) d.split[day] = value;
+      else setRotationPick(d, day, week, value);
     });
     if (created) {
       setActive(value);
@@ -406,11 +444,11 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   };
 
   const deleteCategory = async () => {
-    const days = WEEKDAYS.filter((day) => state.split[day] === active);
+    const days = daysUsing(state.split, state.rotations, active, WEEKDAYS);
     const ok = await askConfirm({
       title: `Delete ${active}?`,
       message: `This removes the ${active} routine${
-        days.length ? ` and sets ${days.join(', ')} to Rest` : ''
+        days.length ? ` and sets it to Rest on ${days.join(', ')}` : ''
       }. Past logged sessions are kept.`,
       confirmLabel: 'Delete',
       destructive: true,
@@ -420,7 +458,7 @@ export function SplitTab({ state, update, askConfirm, toast }) {
     update(
       (d) => {
         delete d.workouts[victim];
-        for (const day of WEEKDAYS) if (d.split[day] === victim) d.split[day] = 'Rest';
+        clearFromSchedule(d, victim, WEEKDAYS);
       },
       { undo: `Deleted ${victim}` }
     );
@@ -435,28 +473,60 @@ export function SplitTab({ state, update, askConfirm, toast }) {
         <ul className="schedule-list">
           {WEEKDAYS.map((day) => {
             const value = state.split[day];
+            const weeks = frequencyOf(state.rotations, day);
+            const rot = weeks > 1 ? state.rotations[day] : null;
+            const current = rot ? rotationIndex(rot, today) : 0;
             return (
-              <li key={day} className={`schedule-row ${day === todayName ? 'is-today' : ''}`}>
-                <span className="schedule-day">
-                  {day}
-                  {day === todayName && <span className="today-dot" aria-label="today" />}
-                </span>
-                <div className={`glass-select-wrap ${badgeClass(value)}`}>
-                  <select
-                    className="glass-select"
-                    value={value}
-                    aria-label={`${day} workout`}
-                    onChange={(e) => assignDay(day, e.target.value)}
-                  >
-                    {options.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                    <option value="Rest">Rest</option>
-                    <option value={OTHER}>Other…</option>
-                  </select>
+              <li key={day} className={`schedule-row ${day === todayName ? 'is-today' : ''} ${rot ? 'is-rotating' : ''}`}>
+                <div className="schedule-main">
+                  <span className="schedule-day">
+                    {day}
+                    {day === todayName && <span className="today-dot" aria-label="today" />}
+                  </span>
+                  <div className="schedule-controls">
+                    <div className="glass-select-wrap freq-select-wrap">
+                      <select
+                        className="glass-select freq-select"
+                        value={weeks}
+                        aria-label={`${day} frequency`}
+                        onChange={(e) => changeFrequency(day, Number(e.target.value))}
+                      >
+                        {FREQUENCIES.map((f) => (
+                          <option key={f.weeks} value={f.weeks}>
+                            {f.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {!rot && (
+                      <DaySelect value={value} options={options} label={`${day} workout`} onChange={(v) => assignDay(day, v)} />
+                    )}
+                  </div>
                 </div>
+                {rot && (
+                  <ol className="rotation-list">
+                    {rot.picks.map((pick, i) => (
+                      <li key={i} className={`rotation-row ${i === current ? 'is-current' : ''}`}>
+                        <span className="rotation-label">
+                          Week {i + 1}
+                          {i === current ? (
+                            <span className="rotation-now">This week</span>
+                          ) : (
+                            <button type="button" className="link-btn rotation-set" onClick={() => makeThisWeek(day, i)}>
+                              Make this week
+                            </button>
+                          )}
+                        </span>
+                        <DaySelect
+                          value={pick}
+                          options={options}
+                          label={`${day} week ${i + 1} workout`}
+                          onChange={(v) => assignDay(day, v, i)}
+                        />
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </li>
             );
           })}
@@ -595,12 +665,13 @@ export function SplitTab({ state, update, askConfirm, toast }) {
       />
       <MergeModal target={mergeTarget} candidates={mergeCandidates} onClose={() => setMergeTarget(null)} onMerge={merge} />
       <CustomDayModal
-        day={customDay}
+        day={customDay ? (customDay.week === null ? customDay.day : `${customDay.day}, week ${customDay.week + 1}`) : null}
         workouts={state.workouts}
         onClose={() => setCustomDay(null)}
-        onSave={(day, name) => {
+        onSave={(_label, name) => {
+          const target = customDay;
           setCustomDay(null);
-          assignDay(day, name);
+          if (target) assignDay(target.day, name, target.week);
         }}
       />
     </section>
