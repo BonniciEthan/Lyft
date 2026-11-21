@@ -1,6 +1,6 @@
 {
   "name": "lyft-server",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "private": true,
   "description": "Self-hosted backend for Lyft (Express + better-sqlite3)",
   "main": "index.js",
