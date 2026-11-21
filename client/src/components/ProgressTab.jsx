@@ -8,21 +8,14 @@ import { liveRankStatus } from '../lib/liveRank.js';
 import { hasBodyweight, normalizeProfile } from '../lib/lifterProfileStore.js';
 import { RankUpModal } from './RankUpModal.jsx';
 import { lastSessions } from '../lib/history.js';
-import { badgeClass, fitSets, scheduledFor } from '../lib/splitDays.js';
-
-function freshEntry(ex) {
-  return {
-    exerciseId: ex.id,
-    name: ex.name,
-    sets: Array.from({ length: ex.defaultSets }, () => ({ weight: null, reps: null, spotted: false })),
-  };
-}
+import { badgeClass, fitSets, freshEntry, scheduledFor } from '../lib/splitDays.js';
 
 /**
  * Entries shown for a date.
  * - No log: fresh empty rows from the routine template.
  * - Log for today/future: follow the current template order (picking up newly added
- *   exercises and renames) and keep any logged exercises that were since removed.
+ *   exercises and renames). Exercises deleted in My Split are already gone from today's
+ *   log (see syncLogToRoutine); entries that were never in the routine stay at the end.
  * - Log in the past: exactly what was saved.
  */
 function buildEntries(template, log, followTemplate) {

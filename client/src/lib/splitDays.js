@@ -155,3 +155,62 @@ export function clearFromSchedule(d, name, weekdays) {
 export function daysUsing(split, rotations, name, weekdays) {
   return weekdays.filter((day) => split[day] === name || (rotations?.[day]?.picks || []).includes(name));
 }
+
+/* ------------------------------------------------------------------ */
+/* Keeping today's log in step with My Split                            */
+/* ------------------------------------------------------------------ */
+
+/** An empty logged entry for a routine exercise. */
+export function freshEntry(ex) {
+  return {
+    exerciseId: ex.id,
+    name: ex.name,
+    sets: Array.from({ length: ex.defaultSets }, () => ({ weight: null, reps: null, spotted: false })),
+  };
+}
+
+/** routine name → Set of its exercise ids, taken before a My Split edit. */
+export function routineIds(workouts) {
+  const out = {};
+  for (const [cat, list] of Object.entries(workouts || {})) out[cat] = new Set((list || []).map((ex) => ex.id));
+  return out;
+}
+
+/**
+ * After a My Split edit, makes the saved log for `dateKey` match its routine (mutates `d`):
+ * - exercises removed from the routine are dropped, with everything logged for them that day;
+ * - remaining exercises keep their sets, take the routine's name and set count, and follow
+ *   its order; newly added exercises get empty sets;
+ * - entries that were never part of the routine (e.g. moved in by a merge) are kept at the end;
+ * - if the routine itself was deleted and nothing is left, the day's log goes too.
+ * Only that one date is touched, so past history is never changed.
+ */
+export function syncLogToRoutine(d, before, dateKey) {
+  const log = d.logs?.[dateKey];
+  if (!log || !Array.isArray(log.exercises)) return;
+  const was = before?.[log.category];
+  if (!was) return; // not a routine before this edit (imported or already-removed day type)
+  const template = d.workouts?.[log.category];
+  const nowIds = new Set((template || []).map((ex) => ex.id));
+  const kept = log.exercises.filter((e) => !(was.has(e.exerciseId) && !nowIds.has(e.exerciseId)));
+  if (!template) {
+    if (kept.length) log.exercises = kept;
+    else delete d.logs[dateKey];
+    return;
+  }
+  const byId = new Map(kept.map((e) => [e.exerciseId, e]));
+  const ordered = template.map((ex) => {
+    const e = byId.get(ex.id);
+    return e ? { ...e, name: ex.name, sets: fitSets(e.sets || [], ex.defaultSets) } : freshEntry(ex);
+  });
+  log.exercises = [...ordered, ...kept.filter((e) => !nowIds.has(e.exerciseId))];
+}
+
+/** Wraps a My Split mutation so today's log is reconciled in the same state update. */
+export function withLogSync(mutate, dateKey) {
+  return (d) => {
+    const before = routineIds(d.workouts);
+    mutate(d);
+    syncLogToRoutine(d, before, dateKey);
+  };
+}

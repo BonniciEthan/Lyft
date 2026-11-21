@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WEEKDAYS, todayKey, weekdayName } from '../lib/dates.js';
 import { uid } from '../lib/storage.js';
 import { ArrowDown, ArrowUp, PlusIcon, SearchIcon, TrashIcon } from './Icons.jsx';
@@ -21,6 +21,7 @@ import {
   setFrequency,
   setRotationPick,
   setRotationThisWeek,
+  withLogSync,
 } from '../lib/splitDays.js';
 
 const OTHER = '__other__';
@@ -293,7 +294,10 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
   );
 }
 
-export function SplitTab({ state, update, askConfirm, toast }) {
+export function SplitTab({ state, update: rawUpdate, askConfirm, toast }) {
+  // Every My Split edit also reconciles today's logged workout in the same state change,
+  // so removed exercises (and their sets) leave Today's Workout and the result is saved.
+  const update = useCallback((mutate, opts) => rawUpdate(withLogSync(mutate, todayKey()), opts), [rawUpdate]);
   const categories = Object.keys(state.workouts);
   const [active, setActive] = useState(categories[0] || '');
   const [newName, setNewName] = useState('');
@@ -408,7 +412,9 @@ export function SplitTab({ state, update, askConfirm, toast }) {
   const remove = async (ex) => {
     const ok = await askConfirm({
       title: 'Delete exercise?',
-      message: `Remove "${ex.name}" from ${active}? Past logged sessions are kept.`,
+      message: `Remove "${ex.name}" from ${active}?${
+        state.logs[today]?.exercises?.some((e) => e.exerciseId === ex.id) ? ' Anything logged for it today is removed too.' : ''
+      } Past sessions are kept.`,
       confirmLabel: 'Delete',
       destructive: true,
     });
@@ -449,7 +455,7 @@ export function SplitTab({ state, update, askConfirm, toast }) {
       title: `Delete ${active}?`,
       message: `This removes the ${active} routine${
         days.length ? ` and sets it to Rest on ${days.join(', ')}` : ''
-      }. Past logged sessions are kept.`,
+      }.${state.logs[today]?.category === active ? ` Today's ${active} log is removed too.` : ''} Past sessions are kept.`,
       confirmLabel: 'Delete',
       destructive: true,
     });

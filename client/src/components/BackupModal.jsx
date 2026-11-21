@@ -4,6 +4,8 @@ import { DownloadIcon, UploadIcon } from './Icons.jsx';
 import { BackupError, backupFileName, buildBackup, isEmptySummary, parseBackup, summarizeState } from '../lib/backup.js';
 import { getLastBackupAt, readFileText, saveBackupFile, setLastBackupAt } from '../lib/backupFile.js';
 import { readCache } from '../lib/openFoodFactsService.js';
+import { CsvImportError, isCsvFile, mergeImportedSessions, parseLiftCsv } from '../lib/csvImport.js';
+import { normalizeProfile } from '../lib/lifterProfileStore.js';
 import { formatShortDate, todayKey, toKey, daysBetween } from '../lib/dates.js';
 import { IS_LOCAL } from '../edition.js';
 
@@ -33,8 +35,21 @@ function lastBackupLabel(iso) {
   return `${days} days ago`;
 }
 
-export function BackupModal({ open, onClose, state, onImport, askConfirm, toast }) {
+const CSV_ACCEPT = '.csv,text/csv,text/comma-separated-values,application/csv,application/vnd.ms-excel';
+const deepCopy = (v) => JSON.parse(JSON.stringify(v));
+
+/** D/M/Y unless the device is set to US English (M/D/Y); only used when the file is ambiguous. */
+const localeDayFirst = () => {
+  try {
+    return !/^en-US$/i.test(navigator.language || '');
+  } catch {
+    return true;
+  }
+};
+
+export function BackupModal({ open, onClose, state, onImport, onImportCsv, askConfirm, toast }) {
   const fileRef = useRef(null);
+  const csvRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [lastAt, setLastAt] = useState(getLastBackupAt());
@@ -66,8 +81,45 @@ export function BackupModal({ open, onClose, state, onImport, askConfirm, toast 
     }
   };
 
+  const doCsvImport = async (file) => {
+    if (!file) return;
+    setError('');
+    let parsed;
+    let preview;
+    try {
+      parsed = parseLiftCsv(await readFileText(file), { unit: normalizeProfile(state.profile).unit, preferDayFirst: localeDayFirst() });
+      // Dry run on a copy so the confirmation shows what will really be added.
+      preview = mergeImportedSessions(deepCopy(state), parsed.sessions);
+    } catch (err) {
+      setError(err instanceof CsvImportError ? err.message : 'Could not read that file. Make sure it is a CSV export.');
+      return;
+    }
+    if (!preview.sets) {
+      setError(`Nothing new to import: all ${plural(parsed.setCount, 'set')} in that file are already logged.`);
+      return;
+    }
+    onClose();
+    const notes = [];
+    if (preview.duplicateSets) notes.push(`${plural(preview.duplicateSets, 'set')} already logged will be left as they are.`);
+    if (parsed.skippedTotal) notes.push(`${plural(parsed.skippedTotal, 'row')} skipped (warm-ups, cardio, or missing reps or dates).`);
+    const first = parsed.sessions[0].date;
+    const last = parsed.sessions[parsed.sessions.length - 1].date;
+    const ok = await askConfirm({
+      title: 'Import workouts?',
+      message: `Add ${plural(preview.workouts, 'workout')} (${plural(preview.sets, 'weight set')}) from ${formatShortDate(first)}${
+        first === last ? '' : ` to ${formatShortDate(last)}`
+      }.\n\nYour existing workouts are kept.${notes.length ? `\n\n${notes.join('\n')}` : ''}`,
+      confirmLabel: 'Import',
+    });
+    if (ok) onImportCsv(parsed, preview);
+  };
+
   const doImport = async (file) => {
     if (!file) return;
+    if (isCsvFile(file)) {
+      doCsvImport(file);
+      return;
+    }
     setError('');
     let parsed;
     try {
@@ -123,10 +175,26 @@ export function BackupModal({ open, onClose, state, onImport, askConfirm, toast 
         <input
           ref={fileRef}
           type="file"
-          accept="application/json,.json"
+          accept={`application/json,.json,${CSV_ACCEPT}`}
           hidden
           onChange={(e) => {
             doImport(e.target.files?.[0]);
+            e.target.value = '';
+          }}
+        />
+
+        <div className="sheet-sub">Import from another app</div>
+        <button type="button" className="btn btn-glass backup-btn" onClick={() => csvRef.current?.click()} disabled={busy}>
+          <UploadIcon width={18} height={18} /> Import Lift Up CSV…
+        </button>
+        <p className="field-hint backup-hint">Adds your logged weight sets to your history. Nothing already on this device is replaced.</p>
+        <input
+          ref={csvRef}
+          type="file"
+          accept={CSV_ACCEPT}
+          hidden
+          onChange={(e) => {
+            doCsvImport(e.target.files?.[0]);
             e.target.value = '';
           }}
         />

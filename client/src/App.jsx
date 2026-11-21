@@ -22,6 +22,7 @@ import { resumeReminder } from './lib/reminders.js';
 import { PrivacyPage } from './components/PrivacyPage.jsx';
 import { AgeGate } from './components/AgeGate.jsx';
 import { isAgeConfirmed } from './lib/privacy.js';
+import { mergeImportedSessions } from './lib/csvImport.js';
 
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
 
@@ -213,6 +214,13 @@ export default function App() {
     toast('Backup restored');
   };
 
+  /** Lift Up CSV: adds the parsed sessions to history (with Undo). `preview` = counts from a dry run. */
+  const handleImportCsv = (parsed, preview) => {
+    const w = `${preview.workouts} workout${preview.workouts === 1 ? '' : 's'}`;
+    const sets = `${preview.sets} weight set${preview.sets === 1 ? '' : 's'}`;
+    update((draft) => mergeImportedSessions(draft, parsed.sessions), { undo: `Imported ${w} (${sets}) from CSV.` });
+  };
+
   return (
     <div className="app">
       <div className="ambient" aria-hidden>
@@ -281,6 +289,7 @@ export default function App() {
         onClose={() => setBackupOpen(false)}
         state={state}
         onImport={handleImport}
+        onImportCsv={handleImportCsv}
         askConfirm={askConfirm}
         toast={toast}
       />
