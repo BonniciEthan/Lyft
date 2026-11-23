@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
+import { listItemMotion } from '../lib/motion.js';
 import { WEEKDAYS, todayKey, weekdayName } from '../lib/dates.js';
 import { uid } from '../lib/storage.js';
 import { ArrowDown, ArrowUp, PlusIcon, SearchIcon, TrashIcon } from './Icons.jsx';
@@ -132,16 +135,16 @@ function LibraryModal({ open, onClose, category, existing, onAdd }) {
         <button type="button" role="tab" aria-selected={!muscle} className={`chip chip-sm ${!muscle ? 'is-active' : ''}`} onClick={() => setMuscle('')}>
           All
         </button>
-        {MUSCLES.map((m) => (
+        {MUSCLES.map((mu) => (
           <button
-            key={m.id}
+            key={mu.id}
             type="button"
             role="tab"
-            aria-selected={muscle === m.id}
-            className={`chip chip-sm ${muscle === m.id ? 'is-active' : ''}`}
-            onClick={() => setMuscle(m.id)}
+            aria-selected={muscle === mu.id}
+            className={`chip chip-sm ${muscle === mu.id ? 'is-active' : ''}`}
+            onClick={() => setMuscle(mu.id)}
           >
-            {m.name}
+            {mu.name}
           </button>
         ))}
       </div>
@@ -211,7 +214,8 @@ function MergeModal({ target, candidates, onClose, onMerge }) {
   );
 }
 
-function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMove, onDelete, onMuscle, onMerge }) {
+// forwardRef so the routine list's AnimatePresence can measure a row as it leaves.
+const ExerciseRow = forwardRef(function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMove, onDelete, onMuscle, onMerge }, ref) {
   const [name, setName] = useState(exercise.name);
   useEffect(() => setName(exercise.name), [exercise.name]);
 
@@ -229,7 +233,7 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
   const needsMuscle = !auto.excluded && !auto.muscle && !exercise.muscle;
 
   return (
-    <li className="routine-row">
+    <m.li ref={ref} className="routine-row" {...listItemMotion}>
       <div className="routine-row-top">
         <span className="routine-index tabular">{index + 1}</span>
         <input
@@ -278,9 +282,9 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
             disabled={auto.excluded}
           >
             <option value="">Auto ({autoLabel})</option>
-            {MUSCLES.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
+            {MUSCLES.map((mu) => (
+              <option key={mu.id} value={mu.id}>
+                {mu.name}
               </option>
             ))}
           </select>
@@ -290,9 +294,9 @@ function ExerciseRow({ exercise, category, index, total, onRename, onSets, onMov
         </button>
       </div>
       {needsMuscle && <p className="field-hint muscle-warning">Lyft doesn’t recognise this name, so it counts towards no muscle rank. Pick a muscle.</p>}
-    </li>
+    </m.li>
   );
-}
+});
 
 export function SplitTab({ state, update: rawUpdate, askConfirm, toast }) {
   // Every My Split edit also reconciles today's logged workout in the same state change,
@@ -607,6 +611,7 @@ export function SplitTab({ state, update: rawUpdate, askConfirm, toast }) {
               <p className="muted empty-line">No exercises in {active} yet.</p>
             ) : (
               <ul className="routine-list">
+                <AnimatePresence initial={false} mode="popLayout">
                 {exercises.map((ex, i) => (
                   <ExerciseRow
                     key={ex.id}
@@ -622,6 +627,7 @@ export function SplitTab({ state, update: rawUpdate, askConfirm, toast }) {
                     onDelete={() => remove(ex)}
                   />
                 ))}
+                </AnimatePresence>
               </ul>
             )}
 

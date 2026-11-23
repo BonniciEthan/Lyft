@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
+import { listItemMotion } from '../lib/motion.js';
 import { addDays, formatDate, relativeLabel, todayKey } from '../lib/dates.js';
 import { FOODS } from '../lib/foodDatabase.js';
 import {
@@ -243,10 +246,11 @@ function MealCard({ meal, entries, onAdd, onScan, onEdit, onDelete, onSavePreset
       </div>
       {entries.length > 0 && (
         <ul className="entry-list">
+          <AnimatePresence initial={false} mode="popLayout">
           {entries.map((e) => {
-            const m = entryMacros(e);
+            const macros = entryMacros(e);
             return (
-              <li key={e.id} className="entry-row">
+              <m.li key={e.id} className="entry-row" {...listItemMotion}>
                 <button type="button" className="entry-main" onClick={() => onEdit(e)} aria-label={`Edit ${e.name}, ${r1(e.grams)}${e.unit}`}>
                   <span className="entry-name">{e.name}</span>
                   <span className="entry-sub">
@@ -254,16 +258,17 @@ function MealCard({ meal, entries, onAdd, onScan, onEdit, onDelete, onSavePreset
                       {r1(e.grams)}
                       {e.unit}
                     </span>
-                    <MacroLine m={m} />
+                    <MacroLine m={macros} />
                   </span>
                 </button>
-                <span className="entry-kcal tabular">{fmt(m.calories)}</span>
+                <span className="entry-kcal tabular">{fmt(macros.calories)}</span>
                 <button type="button" className="icon-btn entry-del" onClick={() => onDelete(e)} aria-label={`Delete ${e.name}`}>
                   <TrashIcon width={17} height={17} />
                 </button>
-              </li>
+              </m.li>
             );
           })}
+          </AnimatePresence>
         </ul>
       )}
       {entries.length > 0 && (
@@ -297,7 +302,6 @@ export function FoodTab({ state, update, askConfirm, toast }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [cacheVersion, setCacheVersion] = useState(0);
   const dateInput = useRef(null);
-  const touch = useRef(null);
 
   const nutrition = useMemo(() => normalizeNutrition(state.nutrition), [state.nutrition]);
   const profile = useMemo(() => normalizeProfile(state.profile), [state.profile]);
@@ -350,24 +354,6 @@ export function FoodTab({ state, update, askConfirm, toast }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [go]);
-
-  const onTouchStart = (e) => {
-    if (e.touches.length !== 1 || e.target.closest('input, textarea, select, .segmented')) {
-      touch.current = null;
-      return;
-    }
-    const t = e.touches[0];
-    touch.current = { x: t.clientX, y: t.clientY, time: Date.now() };
-  };
-  const onTouchEnd = (e) => {
-    const start = touch.current;
-    touch.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - start.time < 900) go(dx > 0 ? -1 : 1);
-  };
 
   const openDatePicker = () => {
     const el = dateInput.current;
@@ -560,7 +546,7 @@ export function FoodTab({ state, update, askConfirm, toast }) {
   const portionFood = sheet?.type === 'portion' ? sheet.food : null;
 
   return (
-    <section className="tab-food" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <section className="tab-food">
       <div className="calendar-bar glass-panel">
         <button type="button" className="icon-btn cal-arrow" onClick={() => go(-1)} aria-label="Previous day">
           <ChevronLeft />

@@ -1,14 +1,74 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, useIsPresent } from 'motion/react';
+import * as m from 'motion/react-m';
 import { CloseIcon } from './Icons.jsx';
+import { EASE, T_SHEET, T_STATE } from '../lib/motion.js';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const sheetMotion = {
+  initial: { y: '100%' },
+  animate: { y: 0, transition: { duration: T_SHEET, ease: EASE } },
+  exit: { y: '100%', transition: { duration: T_STATE + 0.04, ease: EASE } },
+};
+
+const dialogMotion = {
+  initial: { opacity: 0, y: 8, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: T_SHEET, ease: EASE } },
+  exit: { opacity: 0, y: 4, scale: 0.97, transition: { duration: T_STATE, ease: EASE } },
+};
+
+/** Sheets rise from the bottom edge on phones (see .modal-sheet in styles.css). */
+const isPhoneSheet = (size) => String(size).split(' ').includes('sheet') && window.matchMedia('(max-width: 600px)').matches;
+
+function ModalFrame({ dialogRef, onClose, title, children, footer, size }) {
+  const isPresent = useIsPresent();
+  const motion = isPhoneSheet(size) ? sheetMotion : dialogMotion;
+  return (
+    <m.div
+      className="modal-backdrop"
+      // A closing modal lets taps through to whatever is underneath.
+      data-closing={isPresent ? undefined : ''}
+      style={{ pointerEvents: isPresent ? undefined : 'none' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { duration: T_STATE, ease: EASE } }}
+      exit={{ opacity: 0, transition: { duration: T_STATE + 0.04, ease: EASE } }}
+      onMouseDown={(e) => {
+        if (isPresent && e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <m.div
+        ref={dialogRef}
+        className={`modal glass-panel modal-${size}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        {...motion}
+      >
+        <div className="modal-head">
+          <h2>{title}</h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+            <CloseIcon />
+          </button>
+        </div>
+        <div className="modal-body">{children}</div>
+        {footer && <div className="modal-foot">{footer}</div>}
+      </m.div>
+    </m.div>
+  );
+}
 
 export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  // While it animates closed the modal keeps showing what it showed while open: callers
+  // often clear the data behind it (e.g. the confirm request) the moment it closes.
+  const shown = useRef(null);
+  if (open) shown.current = { onClose, title, children, footer, size };
 
   // Move focus into the dialog on open and give it back to whatever opened it on close.
   useEffect(() => {
@@ -28,7 +88,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
     const onKey = (e) => {
       const dialog = dialogRef.current;
       // Only the top-most dialog reacts when two are stacked (e.g. a confirm over a sheet).
-      const dialogs = document.querySelectorAll('.modal[role="dialog"]');
+      const dialogs = document.querySelectorAll('.modal-backdrop:not([data-closing]) > .modal[role="dialog"]');
       if (dialog && dialogs[dialogs.length - 1] !== dialog) return;
       if (e.key === 'Escape') {
         onCloseRef.current?.();
@@ -60,33 +120,11 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
     };
   }, [open]);
 
-  if (!open) return null;
-
+  const frame = shown.current;
   return createPortal(
-    <div
-      className="modal-backdrop"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose?.();
-      }}
-    >
-      <div
-        ref={dialogRef}
-        className={`modal glass-panel modal-${size}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        tabIndex={-1}
-      >
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
-            <CloseIcon />
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-foot">{footer}</div>}
-      </div>
-    </div>,
+    <AnimatePresence onExitComplete={() => !open && (shown.current = null)}>
+      {open && frame && <ModalFrame key="modal" dialogRef={dialogRef} {...frame} />}
+    </AnimatePresence>,
     document.body
   );
 }

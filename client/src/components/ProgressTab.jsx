@@ -35,7 +35,6 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
   const [date, setDate] = useState(today);
   const [direction, setDirection] = useState(0);
   const [showTrainPicker, setShowTrainPicker] = useState(false);
-  const touch = useRef(null);
 
   const log = state.logs[date];
   const weekday = weekdayName(date);
@@ -107,27 +106,6 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [go]);
 
-  const onTouchStart = (e) => {
-    if (e.touches.length !== 1 || e.target.closest('input, textarea, select')) {
-      touch.current = null;
-      return;
-    }
-    const t = e.touches[0];
-    touch.current = { x: t.clientX, y: t.clientY, time: Date.now() };
-  };
-
-  const onTouchEnd = (e) => {
-    const start = touch.current;
-    touch.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - start.time < 900) {
-      go(dx > 0 ? -1 : 1); // swipe right = back in time
-    }
-  };
-
   const editEntry = useCallback(
     (exerciseId, mutate, opts) => {
       const cat = category;
@@ -184,7 +162,7 @@ export function ProgressTab({ state, update, askConfirm, onNavigate, toast }) {
   const offSchedule = log && log.category !== scheduled;
 
   return (
-    <section className="tab-progress" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <section className="tab-progress">
       <div className="calendar-bar glass-panel">
         <button type="button" className="icon-btn cal-arrow" onClick={() => go(-1)} aria-label="Previous day">
           <ChevronLeft />

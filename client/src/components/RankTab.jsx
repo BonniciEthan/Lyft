@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Collapse } from './ui/Collapse.jsx';
 import { computeRanks, getMuscleTarget, MUSCLES, rankHistory } from '../lib/rankingEngine.js';
 import { formatWeight, fromKg, hasBodyweight, normalizeProfile, parseWeightInput, roundForUnit, setBodyweight, setSex, setUnit } from '../lib/lifterProfileStore.js';
 import { formatSet, targetOptions, tierInk } from '../lib/rankFormat.js';
@@ -79,7 +80,7 @@ function ProfileBar({ profile, onChange }) {
         </span>
         <ChevronDown width={18} height={18} className="profile-chevron" />
       </button>
-      {open && (
+      <Collapse open={open}>
         <div className="profile-edit">
           <div className="profile-row">
             <span className="field-label">Bodyweight</span>
@@ -100,7 +101,7 @@ function ProfileBar({ profile, onChange }) {
             </p>
           )}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

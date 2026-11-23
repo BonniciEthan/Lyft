@@ -641,7 +641,7 @@ input[type='date'] {
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--text-3);
-  transition: color var(--t-state) var(--ease);
+  transition: color var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .nav-tab.is-active {
@@ -661,7 +661,6 @@ input[type='date'] {
   justify-content: center;
   padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
   background: rgb(var(--scrim-rgb) / 0.5);
-  animation: fade-in var(--t-state) var(--ease);
 }
 
 .modal {
@@ -671,7 +670,6 @@ input[type='date'] {
   display: flex;
   flex-direction: column;
   border-radius: var(--r-xl);
-  animation: modal-in var(--t-sheet) var(--ease);
   overflow: hidden;
 }
 
@@ -718,13 +716,6 @@ input[type='date'] {
 @keyframes fade-in {
   from {
     opacity: 0;
-  }
-}
-
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
   }
 }
 
@@ -1051,7 +1042,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-weight: 500;
   color: var(--text-3);
   white-space: nowrap;
-  transition: color var(--t-state) var(--ease);
+  transition: color var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .segmented button.is-active {
@@ -1926,7 +1917,6 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 10px;
   padding: 4px 16px 16px;
   border-top: 1px solid var(--rim-soft);
-  animation: fade-in 0.25s ease;
 }
 
 .profile-row {
@@ -2267,13 +2257,6 @@ input[type='date']::-webkit-calendar-picker-indicator {
   .modal-sheet {
     border-radius: 28px 28px 0 0;
     padding-bottom: var(--safe-bottom);
-    animation: sheet-in 0.4s var(--ease);
-  }
-}
-
-@keyframes sheet-in {
-  from {
-    transform: translateY(100%);
   }
 }
 
@@ -3998,7 +3981,7 @@ strong.m-f {
   border: 0 solid var(--hairline);
   border-bottom-width: 1px;
   text-align: left;
-  transition: background 0.2s;
+  transition: background var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .pf-rank:hover {
@@ -4692,7 +4675,7 @@ strong.m-f {
   border: 1px solid var(--rim);
   background: var(--glass-elev);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--t-state) var(--ease), border-color var(--t-state) var(--ease), transform var(--t-press) var(--ease);
 }
 
 .switch.is-on {
@@ -5803,4 +5786,100 @@ strong.m-f {
 .pf-appearance,
 .topbar {
   border-color: var(--hairline-strong);
+}
+
+/* ---------------------------------------------------------------------
+   Motion: tab pager, views, list entrances, press feedback
+   --------------------------------------------------------------------- */
+
+/* Tabs slide sideways inside the stage; clip (not hidden) so sticky children keep working. */
+.tab-stage {
+  overflow-x: clip;
+}
+
+.tab-page {
+  width: 100%;
+}
+
+/* Cards rise in one after another when a tab opens. `backwards` so the animation
+   lets go of transform once done and :active presses still work. :where() keeps the
+   specificity at zero so any element's own animation (e.g. the day slide) wins. */
+:where(.tab-page > section) > *,
+:where(.view > .profile-page > .pf-content) > * {
+  animation: rise-in var(--t-sheet) var(--ease) backwards;
+}
+
+:where(.tab-page > section > :nth-child(2)),
+:where(.view > .profile-page > .pf-content > :nth-child(2)) { animation-delay: 40ms; }
+:where(.tab-page > section > :nth-child(3)),
+:where(.view > .profile-page > .pf-content > :nth-child(3)) { animation-delay: 80ms; }
+:where(.tab-page > section > :nth-child(4)),
+:where(.view > .profile-page > .pf-content > :nth-child(4)) { animation-delay: 120ms; }
+:where(.tab-page > section > :nth-child(5)),
+:where(.view > .profile-page > .pf-content > :nth-child(5)) { animation-delay: 160ms; }
+:where(.tab-page > section > :nth-child(n + 6)),
+:where(.view > .profile-page > .pf-content > :nth-child(n + 6)) { animation-delay: 200ms; }
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Press feedback for the controls that had none. Kept at zero specificity so any
+   control's own :active rule still wins. Big rows press less than small buttons. */
+:where(.nav-tab, .link-btn, .pf-link, .cal-center, .segmented button, .switch, .library-row, .pf-rank, .profile-summary) {
+  transition-property: color, background-color, border-color, opacity, transform;
+  transition-duration: var(--t-state), var(--t-state), var(--t-state), var(--t-state), var(--t-press);
+  transition-timing-function: var(--ease);
+}
+
+:where(.nav-tab, .link-btn, .pf-link, .cal-center, .segmented button, .switch):not(:disabled):active {
+  transform: scale(0.97);
+}
+
+:where(.library-row, .pf-rank, .profile-summary):not(:disabled):active {
+  transform: scale(0.985);
+}
+
+.unit-toggle {
+  transition: transform var(--t-press) var(--ease), color var(--t-state) var(--ease);
+}
+
+.unit-toggle:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* Switch knob stretches a little while held, then springs across. */
+.switch-knob {
+  transition: transform 240ms var(--spring), width var(--t-press) var(--ease);
+}
+
+.switch:not(:disabled):active .switch-knob {
+  width: 26px;
+}
+
+.switch.is-on:not(:disabled):active .switch-knob {
+  transform: translateX(16px);
+}
+
+/* Checkbox: the tick grows in as the box fills; the box pops (see GlassCheckbox). */
+.glass-check-pop {
+  display: inline-flex;
+}
+
+.glass-check-box svg {
+  transform: scale(0.5);
+  transition: transform 240ms var(--spring);
+}
+
+.glass-check.is-checked .glass-check-box svg {
+  transform: scale(1);
+}
+
+/* Lists whose rows animate in and out: a leaving row is lifted out of flow relative to these. */
+.entry-list,
+.routine-list {
+  position: relative;
 }

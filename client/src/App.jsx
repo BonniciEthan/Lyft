@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { createSeedState } from './seed.js';
 import { loadLocal, looksLikeState, normalizeState, saveLocal } from './lib/storage.js';
 import { pullState, pushState } from './lib/api.js';
 import { TopBar } from './components/TopBar.jsx';
-import { NavDock } from './components/NavDock.jsx';
+import { NavDock, TABS } from './components/NavDock.jsx';
+import { TabPager } from './components/TabPager.jsx';
+import { EASE, T_PRESS, T_SHEET } from './lib/motion.js';
 import { SettingsModal } from './components/SettingsModal.jsx';
 import { ConfirmDialog } from './components/Modal.jsx';
 import { Toasts } from './components/Toasts.jsx';
@@ -24,6 +28,17 @@ import { AgeGate } from './components/AgeGate.jsx';
 import { isAgeConfirmed } from './lib/privacy.js';
 import { mergeImportedSessions } from './lib/csvImport.js';
 
+const TAB_IDS = TABS.map((t) => t.id);
+
+/** Runs `onMount` before the first paint (used to put the tab scroll position back). */
+function OnMount({ onMount, children }) {
+  useLayoutEffect(() => {
+    onMount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return children;
+}
+
 const clone = typeof structuredClone === 'function' ? structuredClone : (v) => JSON.parse(JSON.stringify(v));
 
 export default function App() {
@@ -32,7 +47,10 @@ export default function App() {
   const storeRef = useRef(store);
   storeRef.current = store;
 
-  const [tab, setTab] = useState('progress');
+  const [tab, setTabState] = useState('progress');
+  // How the current tab arrived: slide direction, whether it came from a swipe, and the
+  // scroll offset the previous tab was left at (so it can leave from where it was).
+  const [tabMotion, setTabMotion] = useState({ dir: 1, swipe: false, scroll: 0 });
   const [profileOpen, setProfileOpen] = useState(false);
   const tabScroll = useRef(0);
   const [saving, setSaving] = useState(false);
@@ -46,6 +64,29 @@ export default function App() {
   const confirmResolver = useRef(null);
   const [installOpen, setInstallOpen] = useState(shouldShowInstallHint);
   const [reminderAskOpen, setReminderAskOpen] = useState(false);
+
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+  const setTab = useCallback((next, swipe = false) => {
+    const current = tabRef.current;
+    if (!next || next === current) return;
+    const dir = TAB_IDS.indexOf(next) > TAB_IDS.indexOf(current) ? 1 : -1;
+    setTabMotion({ dir, swipe, scroll: window.scrollY });
+    setTabState(next);
+  }, []);
+
+  // Each tab opens at the top. Scrolled after the commit so the leaving tab is measured first.
+  const firstTab = useRef(true);
+  useLayoutEffect(() => {
+    if (firstTab.current) {
+      firstTab.current = false;
+      return;
+    }
+    if (!profileOpen) window.scrollTo(0, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  const swipeTab = useCallback((step) => setTab(TAB_IDS[TAB_IDS.indexOf(tabRef.current) + step], true), [setTab]);
 
   // Daily 9pm reminder: keep an enabled one scheduled, and ask once where it can work
   // (never on top of the "add to Home Screen" sheet).
@@ -187,14 +228,12 @@ export default function App() {
     setProfileOpen(true);
   };
 
-  const closeProfile = useCallback(() => {
-    setProfileOpen(false);
-    requestAnimationFrame(() => window.scrollTo(0, tabScroll.current));
-  }, []);
+  // The tabs come back once the Profile page has slid away; <OnMount> restores the scroll then.
+  const closeProfile = useCallback(() => setProfileOpen(false), []);
 
   const leaveProfile = (nextTab) => {
     if (nextTab) {
-      setTab(nextTab);
+      setTabState(nextTab);
       tabScroll.current = 0;
     }
     if (window.history.state?.lyftProfile) window.history.back();
@@ -231,7 +270,16 @@ export default function App() {
 
       {!ageOk ? (
         <AgeGate onConfirmed={() => setAgeOk(true)} onOpenPrivacy={() => setPrivacyOpen(true)} />
-      ) : profileOpen ? (
+      ) : (
+        <AnimatePresence mode="wait" initial={false}>
+          {profileOpen ? (
+        <m.div
+          key="profile"
+          className="view"
+          initial={{ x: 48, opacity: 0 }}
+          animate={{ x: 0, opacity: 1, transition: { duration: T_SHEET, ease: EASE } }}
+          exit={{ x: 48, opacity: 0, transition: { duration: T_PRESS + 0.04, ease: EASE } }}
+        >
         <ProfilePage
           state={state}
           update={update}
@@ -243,8 +291,16 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onShowInstall={() => setInstallOpen(true)}
         />
-      ) : (
-        <>
+        </m.div>
+          ) : (
+        <m.div
+          key="tabs"
+          className="view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: T_PRESS, ease: EASE } }}
+        >
+        <OnMount onMount={() => window.scrollTo(0, tabScroll.current)}>
           {IS_LOCAL ? (
             <header className="topbar topbar-local">
               <div className="topbar-inner">
@@ -266,15 +322,18 @@ export default function App() {
             />
           )}
 
-          <main className="content">
+          <TabPager tabs={TAB_IDS} active={tab} motion={tabMotion} onSwipe={swipeTab}>
             {tab === 'split' && <SplitTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
             {tab === 'progress' && <ProgressTab state={state} update={update} askConfirm={askConfirm} onNavigate={setTab} toast={toast} />}
             {tab === 'food' && <FoodTab state={state} update={update} askConfirm={askConfirm} toast={toast} />}
             {tab === 'rank' && <RankTab state={state} update={update} />}
-          </main>
+          </TabPager>
 
           <NavDock active={tab} onChange={setTab} />
-        </>
+        </OnMount>
+        </m.div>
+          )}
+        </AnimatePresence>
       )}
 
       {!IS_LOCAL && (

@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
+import * as m from 'motion/react-m';
 import { CheckIcon } from './Icons.jsx';
+import { SPRING } from '../lib/motion.js';
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
@@ -112,9 +114,17 @@ export function GlassCheckbox({ checked, onChange, label, tone = 'accent' }) {
       className={`glass-check tone-${tone} ${checked ? 'is-checked' : ''}`}
       onClick={() => onChange(!checked)}
     >
-      <span className="glass-check-box">
-        <CheckIcon width={16} height={16} />
-      </span>
+      {/* Pops only when the value changes, not when the row first appears. */}
+      <m.span
+        className="glass-check-pop"
+        initial={false}
+        animate={{ scale: checked ? [1, 1.14, 1] : [1, 0.94, 1] }}
+        transition={{ duration: 0.28, ease: SPRING }}
+      >
+        <span className="glass-check-box">
+          <CheckIcon width={16} height={16} />
+        </span>
+      </m.span>
     </button>
   );
 }

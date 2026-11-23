@@ -87,7 +87,7 @@ export function StrengthChart({ history }) {
       <div className="chart-toolbar">
         <Segmented small options={RANGES} value={range} onChange={(v) => { setRange(v); setHover(null); }} label="Chart range" />
       </div>
-      <div className="chart-frame" ref={wrap}>
+      <div className="chart-frame" ref={wrap} data-no-swipe>
         <svg
           width={W}
           height={H}
