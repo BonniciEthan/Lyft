@@ -1,6 +1,6 @@
 [package]
 name = "lyft"
-version = "1.5.3"
+version = "1.6.0"
 description = "Lyft desktop client"
 authors = ["you"]
 edition = "2021"
